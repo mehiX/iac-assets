@@ -16,7 +16,7 @@ compile:
   stage: build
   script:
     - mkdir -p dist
-    - go build -o dist/iac ./...
+    - go build -o dist/iac ./main.go
   artifacts:
     paths:
       - dist
