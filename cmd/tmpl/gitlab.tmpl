@@ -1,5 +1,4 @@
-{{ define "machines"}}
-{{ range . }}
+{{ define "gitlab"}}
     {{ if ne .Error nil }}
         <p style="color: red">Error: {{ .Error }}</p>
     {{ end }}
@@ -34,5 +33,4 @@
     {{ end }}
     </tbody>
     </table>
-{{ end }}
 {{ end }}

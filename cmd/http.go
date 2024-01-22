@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/spf13/cobra"
 )
 
@@ -16,7 +17,7 @@ const defaultAddr = "127.0.0.1:8080"
 var cmdServeHttp = &cobra.Command{
 	Use:   "serve",
 	Long:  "Serve results over HTTP",
-	Short: "Server results over HTTP",
+	Short: "Serve results over HTTP",
 	Run: func(cmd *cobra.Command, args []string) {
 		addr := defaultAddr
 		if len(args) > 0 {
@@ -39,15 +40,33 @@ var cmdServeHttp = &cobra.Command{
 var htmlTemplates embed.FS
 
 func handler() http.Handler {
-	m := http.NewServeMux()
-	m.HandleFunc("/json", handleGetJsonData)
-	m.HandleFunc("/html", handleGetHtmlData())
+	m := chi.NewRouter()
+	m.Get("/", handleHome)
+	m.Get("/{src}/json", handleGetJsonData)
+	m.Get("/{src}/html", handleGetHtmlData())
 	return m
 }
 
+func handleHome(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, "/gitlab/html", http.StatusFound)
+}
+
 func handleGetJsonData(w http.ResponseWriter, r *http.Request) {
+
+	src := chi.URLParam(r, "src")
+	var data any
+	switch src {
+	case "gitlab":
+		data = gitlabDgpT.Collect()
+	case "vcloud":
+		data = vCloud.Collect()
+	default:
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
 	w.Header().Set("Content-type", "application/json")
-	if err := json.NewEncoder(w).Encode(manager.Data); err != nil {
+	if err := json.NewEncoder(w).Encode(data); err != nil {
 		log.Printf("Encoding Json response: %s\n", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -63,7 +82,19 @@ func handleGetHtmlData() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "text/html")
 
-		if err := tmpl.ExecuteTemplate(w, "main", manager.Data); err != nil {
+		src := chi.URLParam(r, "src")
+		var data any
+		switch src {
+		case "gitlab":
+			data = gitlabDgpT.Collect()
+		case "vcloud":
+			data = vCloud.Collect()
+		default:
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		if err := tmpl.ExecuteTemplate(w, src+"_main", data); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}

@@ -1,8 +1,9 @@
 package main
 
 import (
-	"iac-gitlab-assets/cmd"
 	"log"
+
+	"git.lpc.logius.nl/logius/open/dgp/launchpad/iac-assets/cmd"
 )
 
 func main() {

@@ -2,22 +2,19 @@ package cmd
 
 import (
 	"encoding/json"
-	"fmt"
+	"log"
 	"os"
 
 	"github.com/spf13/cobra"
 )
 
-var cmdShow = &cobra.Command{
-	Use:   "show",
-	Long:  "Print out IAC information gathered from defined sources",
-	Short: "Print out IAC information",
+var cmdVcloud = &cobra.Command{
+	Use:  "vcloud",
+	Long: "Show items managed in Virtual Cloud Directory as part of IAC",
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(manager.Data) == 0 {
-			fmt.Println("No data")
-			return
+		data := vCloud.Collect()
+		if err := json.NewEncoder(os.Stdout).Encode(data); err != nil {
+			log.Fatalln(err)
 		}
-
-		json.NewEncoder(os.Stdout).Encode(manager.Data)
 	},
 }

@@ -1,0 +1,42 @@
+{{ define "vcloud"}}
+    {{ if ne .Error nil }}
+        <p style="color: red">Error: {{ .Error }}</p>
+    {{ end }}
+    <table>
+    <caption>Source: {{ .From }}</caption>
+    <thead>
+        <tr>
+            <th>Tenant</th>
+            <th>VPC name</th>
+            <th>VM name</th>
+            <th>CPUs</th>
+            <th>Memory</th>
+            <th>Storage</th>
+            <th>Storage Profile</th>
+            <th>OS</th>
+            <th>Status</th>
+            <th>Placement Policy</th>
+            <th>Sizing Policy</th>
+            <th>Created</th>
+        </tr>
+    </thead>
+    <tbody>
+    {{ range .Machines }}
+        <tr>
+            <td>{{ .Tenant }}</td>
+            <td>{{ .VPCName }}</td>
+            <td>{{ .VMName }}</td>
+            <td>{{ .CPUs }}</td>
+            <td>{{ .Memory }}</td>
+            <td>{{ .Storage }}</td>
+            <td>{{ .StorageProfile }}</td>
+            <td>{{ .OS }}</td>
+            <td>{{ .Status }}</td>
+            <td>{{ .PlacementPolicy }}</td>
+            <td>{{ .SizingPolicy }}</td>
+            <td>{{ .CreationDate }}</td>
+        </tr>
+    {{ end }}
+    </tbody>
+    </table>
+{{ end }}

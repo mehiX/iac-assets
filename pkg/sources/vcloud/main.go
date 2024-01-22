@@ -1,4 +1,4 @@
-package sources
+package vcloud
 
 import (
 	"fmt"
@@ -11,49 +11,49 @@ import (
 	"github.com/vmware/go-vcloud-director/v2/types/v56"
 )
 
-type VCloudCollector struct {
-	Name     string
-	Endpoint string
-	Username string
-	Password string
-	Insecure bool // skip SSL verification
-	Tenants  []string
+type Collector struct {
+	Name      string
+	Endpoints []string
+	Username  string
+	Password  string
+	Insecure  bool // skip SSL verification
+	Tenants   []string
 }
 
-type VCloudResult struct {
+type Result struct {
 	VirtualMachines []VM
 	Time            time.Time
 	Error           error
 }
 
-func (c *VCloudCollector) Query(tenant string) VCloudResult {
-	u, err := url.ParseRequestURI(c.Endpoint)
+func (c *Collector) Query(endpoint, tenant string) Result {
+	u, err := url.ParseRequestURI(endpoint)
 	if err != nil {
-		return VCloudResult{Error: fmt.Errorf("unable to parse url: %w", err)}
+		return Result{Error: fmt.Errorf("unable to parse url: %w", err)}
 	}
 
 	client := govcd.NewVCDClient(*u, c.Insecure)
 	err = client.Authenticate(c.Username, c.Password, tenant)
 	if err != nil {
-		return VCloudResult{Error: fmt.Errorf("unable to authenticate: %w", err)}
+		return Result{Error: fmt.Errorf("unable to authenticate: %w", err)}
 	}
 
 	// Get the org (tenant)
 	org, err := client.GetOrgByName(tenant)
 	if err != nil {
-		return VCloudResult{Error: err}
+		return Result{Error: err}
 	}
 
 	// Get the compute policies
 	computePolicies, err := org.GetAllVdcComputePolicies(url.Values{})
 	if err != nil {
-		return VCloudResult{Error: err}
+		return Result{Error: err}
 	}
 
 	// Get all the VDCs in the tenants
 	vdcNames, err := org.QueryOrgVdcList()
 	if err != nil {
-		return VCloudResult{Error: err}
+		return Result{Error: err}
 	}
 
 	vmStream := make(chan VM)
@@ -97,7 +97,7 @@ func (c *VCloudCollector) Query(tenant string) VCloudResult {
 		vms = append(vms, vm)
 	}
 
-	return VCloudResult{VirtualMachines: vms, Time: time.Now()}
+	return Result{VirtualMachines: vms, Time: time.Now()}
 }
 
 // createVMFromVCDOutput creates a VM struct from the output of the vcd api
