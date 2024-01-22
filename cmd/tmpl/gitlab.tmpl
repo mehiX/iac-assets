@@ -32,5 +32,18 @@
         </tr>
     {{ end }}
     </tbody>
+    <tfoot>
+        <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>{{ .Aggregates.CpuCount }}</td>
+            <td></td>
+            <td>{{ .Aggregates.MemorySizeGB }}</td>
+        </tr>
+    </tfoot>
     </table>
 {{ end }}

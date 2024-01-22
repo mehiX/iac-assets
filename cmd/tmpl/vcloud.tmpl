@@ -11,7 +11,7 @@
             <th>VM name</th>
             <th>CPUs</th>
             <th>Memory</th>
-            <th>Storage</th>
+            <th>Storage (MB)</th>
             <th>Storage Profile</th>
             <th>OS</th>
             <th>Status</th>
@@ -38,5 +38,21 @@
         </tr>
     {{ end }}
     </tbody>
+    <tfoot>
+        <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>{{ .Aggregates.CPUs }}</td>
+            <td>{{ .Aggregates.Memory }}</td>
+            <td>{{ .Aggregates.StorageMB }}</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+    </tfoot>
     </table>
 {{ end }}

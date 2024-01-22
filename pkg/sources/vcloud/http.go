@@ -2,14 +2,22 @@ package vcloud
 
 import (
 	"fmt"
+	"strconv"
 	"sync"
 	"time"
 )
 
 type PrettyResult struct {
-	From     string
-	Machines []VM
-	Error    error
+	From       string
+	Machines   []VM
+	Aggregates AggregatedResult
+	Error      error
+}
+
+type AggregatedResult struct {
+	CPUs      int
+	Memory    int
+	StorageMB int
 }
 
 func (c *Collector) Collect() PrettyResult {
@@ -44,7 +52,21 @@ func (c *Collector) Collect() PrettyResult {
 	}
 
 	return PrettyResult{
-		Machines: vms,
-		From:     fmt.Sprintf("VMWare Cloud Directory (%s)", time.Now().Format(time.RFC3339)),
-		Error:    err}
+		Machines:   vms,
+		From:       fmt.Sprintf("VMWare Cloud Directory (%s)", time.Now().Format(time.RFC3339)),
+		Aggregates: aggregate(vms),
+		Error:      err}
+}
+
+func aggregate(machines []VM) (aggr AggregatedResult) {
+
+	for _, m := range machines {
+		aggr.CPUs += m.CPUs
+		aggr.Memory += m.Memory
+
+		s, _ := strconv.Atoi(m.Storage)
+		aggr.StorageMB += s
+	}
+
+	return
 }

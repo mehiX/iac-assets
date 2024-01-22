@@ -5,9 +5,15 @@ import (
 )
 
 type PrettyResult struct {
-	From     string // name of the collector
-	Machines []FlatStructMachine
-	Error    error
+	From       string // name of the collector
+	Machines   []FlatStructMachine
+	Error      error
+	Aggregates AggregatedResult
+}
+
+type AggregatedResult struct {
+	CpuCount     int
+	MemorySizeGB int
 }
 
 func (c *Collector) Collect() PrettyResult {
@@ -22,5 +28,19 @@ func (c *Collector) Collect() PrettyResult {
 		c.Name,
 		string(res.CommitID[:min(8, len(res.CommitID))]))
 
-	return PrettyResult{From: fromName, Machines: machines, Error: nil}
+	return PrettyResult{
+		From:       fromName,
+		Machines:   machines,
+		Aggregates: aggregate(machines),
+		Error:      nil}
+}
+
+func aggregate(machines []FlatStructMachine) (aggr AggregatedResult) {
+
+	for _, m := range machines {
+		aggr.CpuCount += m.CpuCount
+		aggr.MemorySizeGB += m.MemorySizeGB
+	}
+
+	return
 }
