@@ -67,7 +67,7 @@ func handleGetJsonData(w http.ResponseWriter, r *http.Request) {
 	case "gitlab":
 		data = gitlabDgpT.Collect(gitlabSrc)
 	case "vcloud":
-		data = vCloud.Collect()
+		data = vCloud.Collect(vCloudSrc...)
 	default:
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -96,7 +96,7 @@ func handleGetHtmlData() http.HandlerFunc {
 		case "gitlab":
 			data = gitlabDgpT.Collect(gitlabSrc)
 		case "vcloud":
-			data = vCloud.Collect()
+			data = vCloud.Collect(vCloudSrc...)
 		default:
 			w.WriteHeader(http.StatusNotFound)
 			return

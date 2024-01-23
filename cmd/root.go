@@ -20,6 +20,8 @@ var cmdRoot = &cobra.Command{
 var gitlabDgpT *gitlab.Collector
 var vCloud *vcloud.Collector
 
+var vCloudSrc = make([]vcloud.Source, 0)
+
 func init() {
 	godotenv.Load()
 
@@ -29,10 +31,16 @@ func init() {
 	}
 
 	vCloud = &vcloud.Collector{
-		Username:  os.Getenv("PICARD_USER"),
-		Password:  os.Getenv("PICARD_PASSWORD"),
-		Endpoints: strings.Split(os.Getenv("VCLOUD_ENDPOINTS"), ","),
-		Tenants:   strings.Split(os.Getenv("VCLOUD_TENANTS"), ","),
+		Username: os.Getenv("PICARD_USER"),
+		Password: os.Getenv("PICARD_PASSWORD"),
+	}
+
+	ep := strings.Split(os.Getenv("VCLOUD_ENDPOINTS"), ",")
+	tenants := strings.Split(os.Getenv("VCLOUD_TENANTS"), ",")
+
+	for _, t := range tenants {
+		src := vcloud.Source{Endpoints: ep, Tenant: t}
+		vCloudSrc = append(vCloudSrc, src)
 	}
 
 	cmdRoot.AddCommand(cmdGitlab, cmdVcloud, cmdServeHttp)

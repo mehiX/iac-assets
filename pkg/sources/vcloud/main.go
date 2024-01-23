@@ -12,12 +12,14 @@ import (
 )
 
 type Collector struct {
-	Name      string
+	Username string
+	Password string
+	Insecure bool // skip SSL verification
+}
+
+type Source struct {
 	Endpoints []string
-	Username  string
-	Password  string
-	Insecure  bool // skip SSL verification
-	Tenants   []string
+	Tenant    string
 }
 
 type Result struct {
@@ -27,6 +29,7 @@ type Result struct {
 }
 
 func (c *Collector) Query(endpoint, tenant string) Result {
+
 	u, err := url.ParseRequestURI(endpoint)
 	if err != nil {
 		return Result{Error: fmt.Errorf("unable to parse url: %w", err)}
@@ -58,36 +61,36 @@ func (c *Collector) Query(endpoint, tenant string) Result {
 
 	vmStream := make(chan VM)
 
+	var wg sync.WaitGroup
+	wg.Add(len(vdcNames))
+
+	// Loop through the VDCs and get all the VMs
+	for _, vdcName := range vdcNames {
+		go func(vdcName *types.QueryResultOrgVdcRecordType) {
+			defer wg.Done()
+			// Get the VDC
+			vdc, err := org.GetVDCByName(vdcName.Name, false)
+			if err != nil {
+				vmStream <- VM{Error: err}
+				return
+			}
+
+			// Get all VMs in the VDC
+			var filter types.VmQueryFilter
+			vms, err := vdc.QueryVmList(filter)
+			if err != nil {
+				vmStream <- VM{Error: err}
+				return
+			}
+
+			// Loop through the VMs and add them to the exportLines slice
+			for _, vm := range vms {
+				vmStream <- createVMFromVCDOutput(tenant, vm, vdcName.Name, computePolicies)
+			}
+		}(vdcName)
+	}
+
 	go func() {
-		var wg sync.WaitGroup
-		wg.Add(len(vdcNames))
-
-		// Loop through the VDCs and get all the VMs
-		for _, vdcName := range vdcNames {
-			go func(vdcName *types.QueryResultOrgVdcRecordType) {
-				defer wg.Done()
-				// Get the VDC
-				vdc, err := org.GetVDCByName(vdcName.Name, false)
-				if err != nil {
-					vmStream <- VM{Error: err}
-					return
-				}
-
-				// Get all VMs in the VDC
-				var filter types.VmQueryFilter
-				vms, err := vdc.QueryVmList(filter)
-				if err != nil {
-					vmStream <- VM{Error: err}
-					return
-				}
-
-				// Loop through the VMs and add them to the exportLines slice
-				for _, vm := range vms {
-					vmStream <- createVMFromVCDOutput(tenant, vm, vdcName.Name, computePolicies)
-				}
-			}(vdcName)
-		}
-
 		wg.Wait()
 		close(vmStream)
 	}()
