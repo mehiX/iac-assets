@@ -8,11 +8,19 @@ import (
 	"log"
 	"net/http"
 
+	"git.lpc.logius.nl/logius/open/dgp/launchpad/iac-assets/pkg/sources/gitlab"
 	"github.com/go-chi/chi/v5"
 	"github.com/spf13/cobra"
 )
 
 const defaultAddr = "127.0.0.1:8080"
+
+var gitlabSrc = gitlab.Source{
+	Tenant:   "DGP-DGP-OT",
+	Ref:      "main",
+	Project:  "logius/open/dgp/infra-config-dgp-dgp-ot",
+	Filepath: "infra/dgp-t/vm.yml",
+}
 
 var cmdServeHttp = &cobra.Command{
 	Use:   "serve",
@@ -57,7 +65,7 @@ func handleGetJsonData(w http.ResponseWriter, r *http.Request) {
 	var data any
 	switch src {
 	case "gitlab":
-		data = gitlabDgpT.Collect()
+		data = gitlabDgpT.Collect(gitlabSrc)
 	case "vcloud":
 		data = vCloud.Collect()
 	default:
@@ -86,7 +94,7 @@ func handleGetHtmlData() http.HandlerFunc {
 		var data any
 		switch src {
 		case "gitlab":
-			data = gitlabDgpT.Collect()
+			data = gitlabDgpT.Collect(gitlabSrc)
 		case "vcloud":
 			data = vCloud.Collect()
 		default:

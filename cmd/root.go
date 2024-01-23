@@ -24,12 +24,8 @@ func init() {
 	godotenv.Load()
 
 	gitlabDgpT = &gitlab.Collector{
-		Name:     "Gitlab DGP-T",
-		Token:    os.Getenv("GITLAB_TOKEN"),
-		BaseURL:  "https://git.lpc.logius.nl",
-		Ref:      "main",
-		Project:  "logius/open/dgp/infra-config-dgp-dgp-ot",
-		Filepath: "infra/dgp-t/vm.yml",
+		Token:   os.Getenv("GITLAB_TOKEN"),
+		BaseURL: os.Getenv("GITLAB_BASEURL"),
 	}
 
 	vCloud = &vcloud.Collector{

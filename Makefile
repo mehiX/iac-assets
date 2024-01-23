@@ -27,7 +27,7 @@ build: install_deps
 	go build -o $(BIN)/iac_$(OS)_$(ARCH)$(EXE) ./main.go
 
 serve: build
-	./dist/iac serve
+	$(BIN)/iac_$(OS)_$(ARCH)$(EXE) serve
 
 clean:
 	rm -rf $(BIN)

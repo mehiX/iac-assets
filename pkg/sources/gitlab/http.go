@@ -1,38 +1,48 @@
 package gitlab
 
-import (
-	"fmt"
-)
-
 type PrettyResult struct {
-	From       string // name of the collector
+	Tenant     string
+	CommitID   string
 	Machines   []FlatStructMachine
 	Error      error
 	Aggregates AggregatedResult
 }
+
+type PrettyResults []PrettyResult
 
 type AggregatedResult struct {
 	CpuCount     int
 	MemorySizeGB int
 }
 
-func (c *Collector) Collect() PrettyResult {
-	res := c.Query()
-	if res.Error != nil {
-		return PrettyResult{Error: res.Error}
+func (c *Collector) Collect(src ...Source) PrettyResults {
+
+	ch := make(chan PrettyResult)
+
+	querySrc := func(i int) {
+		res := c.Query(src[i])
+		machines := res.Zones.ToFlatStructMachines()
+		pr := PrettyResult{
+			Tenant:     src[i].Tenant,
+			CommitID:   string(res.CommitID[:min(8, len(res.CommitID))]),
+			Machines:   machines,
+			Aggregates: aggregate(machines),
+			Error:      res.Error,
+		}
+		ch <- pr
 	}
 
-	machines := res.Zones.ToFlatStructMachines()
+	for i := range src {
+		go querySrc(i)
+	}
 
-	fromName := fmt.Sprintf("%s (%s)",
-		c.Name,
-		string(res.CommitID[:min(8, len(res.CommitID))]))
+	results := make(PrettyResults, 0)
+	for i := 0; i < len(src); i++ {
+		res := <-ch
+		results = append(results, res)
+	}
 
-	return PrettyResult{
-		From:       fromName,
-		Machines:   machines,
-		Aggregates: aggregate(machines),
-		Error:      nil}
+	return results
 }
 
 func aggregate(machines []FlatStructMachine) (aggr AggregatedResult) {

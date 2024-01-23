@@ -1,49 +1,52 @@
 {{ define "gitlab"}}
+{{ range . }}
     {{ if ne .Error nil }}
-        <p style="color: red">Error: {{ .Error }}</p>
+        <p style="color: red">{{ .Tenant }} ({{ .CommitID }}): {{ .Error }}</p>
+    {{ else }}
+        <table>
+        <caption>Source: {{ .Tenant }} ({{ .CommitID }})</caption>
+        <thead>
+            <tr>
+                <th>Zone</th>
+                <th></th>
+                <th></th>
+                <th>Name</th>
+                <th>IP last octet</th>
+                <th>Tier</th>
+                <th>CPU Count</th>
+                <th>CPU per socket</th>
+                <th>Memory size (GB)</th>
+            </tr>
+        </thead>
+        <tbody>
+        {{ range .Machines }}
+            <tr>
+                <td>{{ .ZoneName }}</td>
+                <td>{{ .VAppsName }}</td>
+                <td>{{ .VAppName }}</td>
+                <td>{{ .Name }}</td>
+                <td>{{ .IPLastOctet }}</td>
+                <td>{{ .Tier }}</td>
+                <td>{{ .CpuCount }}</td>
+                <td>{{ .CpuPerSocket }}</td>
+                <td>{{ .MemorySizeGB }}</td>
+            </tr>
+        {{ end }}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>{{ .Aggregates.CpuCount }}</td>
+                <td></td>
+                <td>{{ .Aggregates.MemorySizeGB }}</td>
+            </tr>
+        </tfoot>
+        </table>
     {{ end }}
-    <table>
-    <caption>Source: {{ .From }}</caption>
-    <thead>
-        <tr>
-            <th>Zone</th>
-            <th></th>
-            <th></th>
-            <th>Name</th>
-            <th>IP last octet</th>
-            <th>Tier</th>
-            <th>CPU Count</th>
-            <th>CPU per socket</th>
-            <th>Memory size (GB)</th>
-        </tr>
-    </thead>
-    <tbody>
-    {{ range .Machines }}
-        <tr>
-            <td>{{ .ZoneName }}</td>
-            <td>{{ .VAppsName }}</td>
-            <td>{{ .VAppName }}</td>
-            <td>{{ .Name }}</td>
-            <td>{{ .IPLastOctet }}</td>
-            <td>{{ .Tier }}</td>
-            <td>{{ .CpuCount }}</td>
-            <td>{{ .CpuPerSocket }}</td>
-            <td>{{ .MemorySizeGB }}</td>
-        </tr>
-    {{ end }}
-    </tbody>
-    <tfoot>
-        <tr>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>{{ .Aggregates.CpuCount }}</td>
-            <td></td>
-            <td>{{ .Aggregates.MemorySizeGB }}</td>
-        </tr>
-    </tfoot>
-    </table>
+{{ end }}
 {{ end }}

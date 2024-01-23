@@ -9,9 +9,12 @@ import (
 )
 
 type Collector struct {
-	Name     string // a name identifying this collector
-	BaseURL  string
-	Token    string
+	BaseURL string
+	Token   string
+}
+
+type Source struct {
+	Tenant   string
 	Project  string
 	Ref      string
 	Filepath string
@@ -23,26 +26,26 @@ type Result struct {
 	Error    error
 }
 
-func (c *Collector) ReadFile() (*gitlab.File, error) {
+func (c *Collector) ReadFile(src Source) (*gitlab.File, error) {
 	git, err := gitlab.NewClient(c.Token, gitlab.WithBaseURL(c.BaseURL))
 	if err != nil {
 		return nil, err
 	}
 
 	gf := &gitlab.GetFileOptions{
-		Ref: gitlab.Ptr(c.Ref),
+		Ref: gitlab.Ptr(src.Ref),
 	}
 
-	f, _, err := git.RepositoryFiles.GetFile(c.Project, c.Filepath, gf)
+	f, _, err := git.RepositoryFiles.GetFile(src.Project, src.Filepath, gf)
 
 	return f, err
 }
 
-func (c *Collector) Query() Result {
+func (c *Collector) Query(src Source) Result {
 
 	var zones Zones
 
-	f, err := c.ReadFile()
+	f, err := c.ReadFile(src)
 	if err != nil {
 		return Result{Error: err}
 	}

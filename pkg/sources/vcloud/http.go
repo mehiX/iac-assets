@@ -1,14 +1,15 @@
 package vcloud
 
 import (
-	"fmt"
+	"net/url"
 	"strconv"
+	"strings"
 	"sync"
-	"time"
 )
 
 type PrettyResult struct {
-	From       string
+	Endpoint   string
+	Tenant     string
 	Machines   []VM
 	Aggregates AggregatedResult
 	Error      error
@@ -20,12 +21,13 @@ type AggregatedResult struct {
 	StorageMB int
 }
 
-func (c *Collector) Collect() PrettyResult {
+type PrettyResults []PrettyResult
 
-	vms := make([]VM, 0)
-	var err error
+func (c *Collector) Collect() PrettyResults {
 
-	ch := make(chan Result)
+	results := make(PrettyResults, 0)
+
+	ch := make(chan PrettyResult)
 
 	go func() {
 		defer close(ch)
@@ -36,7 +38,14 @@ func (c *Collector) Collect() PrettyResult {
 				go func(ep, t string) {
 					defer wg.Done()
 					res := c.Query(ep, t)
-					ch <- res
+					pr := PrettyResult{
+						Machines:   res.VirtualMachines,
+						Error:      res.Error,
+						Endpoint:   endpointName(ep),
+						Tenant:     t,
+						Aggregates: aggregate(res.VirtualMachines),
+					}
+					ch <- pr
 				}(ep, t)
 			}
 		}
@@ -44,18 +53,18 @@ func (c *Collector) Collect() PrettyResult {
 	}()
 
 	for res := range ch {
-		if res.Error != nil {
-			err = res.Error
-			break
-		}
-		vms = append(vms, res.VirtualMachines...)
+		results = append(results, res)
 	}
 
-	return PrettyResult{
-		Machines:   vms,
-		From:       fmt.Sprintf("VMWare Cloud Directory (%s)", time.Now().Format(time.RFC3339)),
-		Aggregates: aggregate(vms),
-		Error:      err}
+	return results
+}
+
+func endpointName(ep string) string {
+	u, err := url.Parse(ep)
+	if err != nil {
+		return ep
+	}
+	return strings.ToUpper(strings.Split(u.Host, ".")[0])
 }
 
 func aggregate(machines []VM) (aggr AggregatedResult) {
