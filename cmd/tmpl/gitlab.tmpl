@@ -4,10 +4,12 @@
         <p style="color: red">{{ .Tenant }} ({{ .CommitID }}): {{ .Error }}</p>
     {{ else }}
         <table>
-        <caption>Source: {{ .Tenant }} ({{ .CommitID }})</caption>
+        <caption>
+            {{ .Tenant }} - {{ .Zone }} ({{ .CommitID }}) 
+            [VMs: {{ len .Machines }}, CPUs: {{ .Aggregates.CpuCount }}, Mem: {{ .Aggregates.MemorySizeGB }}GB]
+        </caption>
         <thead>
             <tr>
-                <th>Zone</th>
                 <th></th>
                 <th></th>
                 <th>Name</th>
@@ -21,7 +23,6 @@
         <tbody>
         {{ range .Machines }}
             <tr>
-                <td>{{ .ZoneName }}</td>
                 <td>{{ .VAppsName }}</td>
                 <td>{{ .VAppName }}</td>
                 <td>{{ .Name }}</td>
@@ -35,7 +36,6 @@
         </tbody>
         <tfoot>
             <tr>
-                <td></td>
                 <td></td>
                 <td></td>
                 <td></td>

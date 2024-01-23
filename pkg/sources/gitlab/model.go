@@ -36,10 +36,12 @@ type Zone map[string]Vapps
 
 type Zones map[string]Zone
 
-func (z Zones) ToFlatStructMachines() []FlatStructMachine {
-	machines := make([]FlatStructMachine, 0)
+// ToFlatStructMachines returns machines in a flat structure, grouped by zone name
+func (z Zones) ToFlatStructMachines() map[string][]FlatStructMachine {
+	machines := make(map[string][]FlatStructMachine)
 
 	for zoneName, zone := range z {
+		zoneMachines := make([]FlatStructMachine, 0)
 		for vappsName, vapps := range zone {
 			for vappName, vapp := range vapps {
 				for machineName, machine := range vapp {
@@ -56,10 +58,11 @@ func (z Zones) ToFlatStructMachines() []FlatStructMachine {
 						ZoneName:     zoneName,
 					}
 
-					machines = append(machines, newMachine)
+					zoneMachines = append(zoneMachines, newMachine)
 				}
 			}
 		}
+		machines[zoneName] = zoneMachines
 	}
 
 	return machines

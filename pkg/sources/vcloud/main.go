@@ -2,6 +2,7 @@ package vcloud
 
 import (
 	"fmt"
+	"log/slog"
 	"net/url"
 	"strings"
 	"sync"
@@ -29,6 +30,8 @@ type Result struct {
 }
 
 func (c *Collector) Query(endpoint, tenant string) Result {
+
+	slog.Info("query vcloud", "tenant", tenant, "endpoint", endpoint)
 
 	u, err := url.ParseRequestURI(endpoint)
 	if err != nil {

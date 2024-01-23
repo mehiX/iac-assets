@@ -1,6 +1,9 @@
 package gitlab
 
+import "sync"
+
 type PrettyResult struct {
+	Zone       string
 	Tenant     string
 	CommitID   string
 	Machines   []FlatStructMachine
@@ -19,26 +22,45 @@ func (c *Collector) Collect(src ...Source) PrettyResults {
 
 	ch := make(chan PrettyResult)
 
-	querySrc := func(i int) {
+	querySrc := func(wg *sync.WaitGroup, i int) {
+		defer wg.Done()
+
 		res := c.Query(src[i])
-		machines := res.Zones.ToFlatStructMachines()
-		pr := PrettyResult{
-			Tenant:     src[i].Tenant,
-			CommitID:   string(res.CommitID[:min(8, len(res.CommitID))]),
-			Machines:   machines,
-			Aggregates: aggregate(machines),
-			Error:      res.Error,
+		if res.Error != nil {
+			ch <- PrettyResult{
+				Tenant:   src[i].Tenant,
+				CommitID: string(res.CommitID[:min(8, len(res.CommitID))]),
+				Error:    res.Error,
+			}
+			return
 		}
-		ch <- pr
+		machines := res.Zones.ToFlatStructMachines()
+		for z, m := range machines {
+			pr := PrettyResult{
+				Zone:       z,
+				Tenant:     src[i].Tenant,
+				CommitID:   string(res.CommitID[:min(8, len(res.CommitID))]),
+				Machines:   m,
+				Aggregates: aggregate(m),
+				Error:      res.Error,
+			}
+			ch <- pr
+		}
 	}
 
+	var wg sync.WaitGroup
+	wg.Add(len(src))
 	for i := range src {
-		go querySrc(i)
+		go querySrc(&wg, i)
 	}
+
+	go func() {
+		wg.Wait()
+		close(ch)
+	}()
 
 	results := make(PrettyResults, 0)
-	for i := 0; i < len(src); i++ {
-		res := <-ch
+	for res := range ch {
 		results = append(results, res)
 	}
 

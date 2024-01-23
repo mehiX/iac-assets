@@ -4,7 +4,10 @@
         <p style="color: red">{{ .Tenant }} ({{ .Name }}): {{ .Error }}</p>
     {{ else }}
         <table>
-        <caption>Source: {{ .Tenant }} ({{ .Name }})</caption>
+        <caption>
+            {{ .Tenant }} ({{ .Name }}) 
+            [VMs: {{ len .Machines }}, CPUs: {{ .Aggregates.CPUs }}, Mem: {{ .Aggregates.Memory }}, Storage: {{ .Aggregates.StorageMB }}MB]
+        </caption>
         <thead>
             <tr>
                 <th>VPC name</th>

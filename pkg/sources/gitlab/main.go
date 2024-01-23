@@ -3,6 +3,7 @@ package gitlab
 import (
 	"bytes"
 	"encoding/base64"
+	"log/slog"
 
 	"github.com/xanzy/go-gitlab"
 	"gopkg.in/yaml.v3"
@@ -42,6 +43,8 @@ func (c *Collector) ReadFile(src Source) (*gitlab.File, error) {
 }
 
 func (c *Collector) Query(src Source) Result {
+
+	slog.Info("query gitlab", "tenant", src.Tenant)
 
 	var zones Zones
 
