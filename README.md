@@ -12,12 +12,15 @@ Clone the project and create `.env`:
 cat > .env <<EOF
 PICARD_USER=
 PICARD_PASSWORD=
-# comma separated list of endpoints (no spaces)
-VCLOUD_ENDPOINTS=
-# comma separated list of tenants (no spaces)
-VCLOUD_TENANTS=
 GITLAB_TOKEN=
+GITLAB_BASEURL=
 EOF
+```
+
+Create a configuration file to hold sources definitions and populate it with your information:
+
+```shell
+cp config.tmpl config.json
 ```
 
 ## Run
@@ -25,7 +28,7 @@ EOF
 Create a binary:
 
 ```shell
-make build
+make
 ```
 
 Start a webserver on the default port (8080):

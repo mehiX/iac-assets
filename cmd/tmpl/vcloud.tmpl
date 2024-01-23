@@ -1,10 +1,10 @@
 {{ define "vcloud"}}
 {{ range . }}
     {{ if ne .Error nil }}
-        <p style="color: red">{{ .Endpoint }} ({{ .Tenant }}): {{ .Error }}</p>
+        <p style="color: red">{{ .Tenant }} ({{ .Name }}): {{ .Error }}</p>
     {{ else }}
         <table>
-        <caption>Source: {{ .Endpoint }} ({{ .Tenant }})</caption>
+        <caption>Source: {{ .Tenant }} ({{ .Name }})</caption>
         <thead>
             <tr>
                 <th>VPC name</th>

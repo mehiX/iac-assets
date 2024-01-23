@@ -14,10 +14,10 @@ type Collector struct {
 }
 
 type Source struct {
-	Tenant   string
-	Project  string
-	Ref      string
-	Filepath string
+	Tenant   string `json:"tenant"`
+	Project  string `json:"project"`
+	Ref      string `json:"ref"`
+	Filepath string `json:"filepath"`
 }
 
 type Result struct {
