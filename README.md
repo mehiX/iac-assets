@@ -25,7 +25,7 @@ EOF
 Create a binary:
 
 ```shell
-make install
+make build
 ```
 
 Start a webserver on the default port (8080):
@@ -40,11 +40,11 @@ open http://localhost:8080/
 View assets as json in terminal:
 
 ```shell
-make install
+make
 
 # gitlab
-./dist/iac gitlab
+./dist/iac_linux_amd64 gitlab
 
 # vmware cloud directory
-./dist/iac vcloud
+./dist/iac_linux_amd64 vcloud
 ```

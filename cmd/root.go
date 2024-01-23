@@ -16,6 +16,7 @@ var cmdRoot = &cobra.Command{
 	Long: "Show IAC information",
 }
 
+// defined here since they are used by more than 1 command
 var gitlabDgpT *gitlab.Collector
 var vCloud *vcloud.Collector
 
