@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 
+	"git.lpc.logius.nl/logius/open/dgp/launchpad/iac-assets/pkg/sources/vcloud"
 	"github.com/go-chi/chi/v5"
 	"github.com/spf13/cobra"
 )
@@ -61,9 +62,8 @@ func handleGetJsonData(w http.ResponseWriter, r *http.Request) {
 		src := getGitlabSources()
 		data = coll.Collect(src...)
 	case "vcloud":
-		coll := getVCloudCollector()
 		src := getVCloudSources()
-		data = coll.Collect(src...)
+		data = vcloud.Collect(src...)
 	default:
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -94,9 +94,8 @@ func handleGetHtmlData() http.HandlerFunc {
 			src := getGitlabSources()
 			data = coll.Collect(src...)
 		case "vcloud":
-			coll := getVCloudCollector()
 			src := getVCloudSources()
-			data = coll.Collect(src...)
+			data = vcloud.Collect(src...)
 		default:
 			w.WriteHeader(http.StatusNotFound)
 			return

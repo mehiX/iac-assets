@@ -1,6 +1,6 @@
 {{ define "gitlab"}}
 {{ range . }}
-    {{ if ne .Error nil }}
+    {{ if ne .Error "" }}
         <p style="color: red">{{ .Tenant }} ({{ .CommitID }}): {{ .Error }}</p>
     {{ else }}
         <table>

@@ -7,7 +7,7 @@ type PrettyResult struct {
 	Tenant     string
 	CommitID   string
 	Machines   []FlatStructMachine
-	Error      error
+	Error      string
 	Aggregates AggregatedResult
 }
 
@@ -30,7 +30,7 @@ func (c *Collector) Collect(src ...Source) PrettyResults {
 			ch <- PrettyResult{
 				Tenant:   src[i].Tenant,
 				CommitID: string(res.CommitID[:min(8, len(res.CommitID))]),
-				Error:    res.Error,
+				Error:    res.Error.Error(),
 			}
 			return
 		}
@@ -42,7 +42,6 @@ func (c *Collector) Collect(src ...Source) PrettyResults {
 				CommitID:   string(res.CommitID[:min(8, len(res.CommitID))]),
 				Machines:   m,
 				Aggregates: aggregate(m),
-				Error:      res.Error,
 			}
 			ch <- pr
 		}

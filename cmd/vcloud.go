@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 
+	"git.lpc.logius.nl/logius/open/dgp/launchpad/iac-assets/pkg/sources/vcloud"
 	"github.com/spf13/cobra"
 )
 
@@ -14,7 +15,6 @@ var cmdVcloud = &cobra.Command{
 	Long: "Show items managed in Virtual Cloud Directory as part of IAC",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		coll := getVCloudCollector()
 		src := getVCloudSources()
 
 		if len(src) == 0 {
@@ -22,7 +22,7 @@ var cmdVcloud = &cobra.Command{
 			return
 		}
 
-		data := coll.Collect(src...)
+		data := vcloud.Collect(src...)
 		if err := json.NewEncoder(os.Stdout).Encode(data); err != nil {
 			log.Fatalln(err)
 		}

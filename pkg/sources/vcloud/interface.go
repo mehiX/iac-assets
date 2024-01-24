@@ -24,7 +24,7 @@ type AggregatedResult struct {
 
 type PrettyResults []PrettyResult
 
-func (c *Collector) Collect(src ...Source) PrettyResults {
+func Collect(src ...Source) PrettyResults {
 
 	ch := make(chan PrettyResult)
 
@@ -33,35 +33,27 @@ func (c *Collector) Collect(src ...Source) PrettyResults {
 	querySrc := func(i int) {
 		defer wg.Done()
 
-		results := make(chan PrettyResult)
+		ep := src[i].Endpoint
+		t := src[i].Tenant
 
-		for _, ep := range src[i].Endpoints {
-			go func(ep, t string) {
-
-				res := c.Query(ep, t)
-				if res.Error != nil {
-					results <- PrettyResult{
-						Name:     endpointName(ep),
-						Tenant:   t,
-						Error:    res.Error.Error(),
-						Endpoint: ep,
-					}
-					return
-				}
-				pr := PrettyResult{
-					Machines:   res.VirtualMachines,
-					Name:       endpointName(ep),
-					Endpoint:   ep,
-					Tenant:     t,
-					Aggregates: aggregate(res.VirtualMachines),
-				}
-				results <- pr
-			}(ep, src[i].Tenant)
+		res := src[i].Query()
+		if res.Error != nil {
+			ch <- PrettyResult{
+				Name:     endpointName(ep),
+				Tenant:   t,
+				Error:    res.Error.Error(),
+				Endpoint: ep,
+			}
+			return
 		}
-
-		for i := 0; i < len(src[i].Endpoints); i++ {
-			ch <- <-results
+		pr := PrettyResult{
+			Machines:   res.VirtualMachines,
+			Name:       endpointName(ep),
+			Endpoint:   ep,
+			Tenant:     t,
+			Aggregates: aggregate(res.VirtualMachines),
 		}
+		ch <- pr
 	}
 
 	wg.Add(len(src))

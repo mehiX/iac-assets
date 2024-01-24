@@ -1,6 +1,6 @@
 {{ define "vcloud"}}
 {{ range . }}
-    {{ if ne .Error nil }}
+    {{ if ne .Error "" }}
         <p style="color: red">{{ .Tenant }} ({{ .Name }}): {{ .Error }}</p>
     {{ else }}
         <table>

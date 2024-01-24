@@ -12,15 +12,12 @@ import (
 	"github.com/vmware/go-vcloud-director/v2/types/v56"
 )
 
-type Collector struct {
-	Username string
-	Password string
-	Insecure bool // skip SSL verification
-}
-
 type Source struct {
-	Endpoints []string
-	Tenant    string
+	User     string `json:"user"`
+	Password string `json:"password"`
+	Tenant   string `json:"tenant"`   // Org
+	Endpoint string `json:"endpoint"` // Href
+	Insecure bool   `json:"insecure"`
 }
 
 type Result struct {
@@ -29,23 +26,23 @@ type Result struct {
 	Error           error
 }
 
-func (c *Collector) Query(endpoint, tenant string) Result {
+func (s Source) Query() Result {
 
-	slog.Info("query vcloud", "tenant", tenant, "endpoint", endpoint)
+	slog.Info("query vcloud", "tenant", s.Tenant, "endpoint", s.Endpoint)
 
-	u, err := url.ParseRequestURI(endpoint)
+	u, err := url.ParseRequestURI(s.Endpoint)
 	if err != nil {
 		return Result{Error: fmt.Errorf("unable to parse url: %w", err)}
 	}
 
-	client := govcd.NewVCDClient(*u, c.Insecure)
-	err = client.Authenticate(c.Username, c.Password, tenant)
+	client := govcd.NewVCDClient(*u, s.Insecure)
+	err = client.Authenticate(s.User, s.Password, s.Tenant)
 	if err != nil {
-		return Result{Error: fmt.Errorf("unable to authenticate: %w", err)}
+		return Result{Error: err}
 	}
 
 	// Get the org (tenant)
-	org, err := client.GetOrgByName(tenant)
+	org, err := client.GetOrgByName(s.Tenant)
 	if err != nil {
 		return Result{Error: err}
 	}
@@ -74,7 +71,7 @@ func (c *Collector) Query(endpoint, tenant string) Result {
 			// Get the VDC
 			vdc, err := org.GetVDCByName(vdcName.Name, false)
 			if err != nil {
-				vmStream <- VM{Tenant: tenant, Error: err}
+				vmStream <- VM{Tenant: s.Tenant, Error: err}
 				return
 			}
 
@@ -82,13 +79,13 @@ func (c *Collector) Query(endpoint, tenant string) Result {
 			var filter types.VmQueryFilter
 			vms, err := vdc.QueryVmList(filter)
 			if err != nil {
-				vmStream <- VM{Tenant: tenant, Error: err}
+				vmStream <- VM{Tenant: s.Tenant, Error: err}
 				return
 			}
 
 			// Loop through the VMs and add them to the exportLines slice
 			for _, vm := range vms {
-				vmStream <- createVMFromVCDOutput(tenant, vm, vdcName.Name, computePolicies)
+				vmStream <- createVMFromVCDOutput(s.Tenant, vm, vdcName.Name, computePolicies)
 			}
 		}(vdcName)
 	}

@@ -10,8 +10,6 @@ Clone the project and create `.env`:
 
 ```shell
 cat > .env <<EOF
-PICARD_USER=
-PICARD_PASSWORD=
 GITLAB_TOKEN=
 GITLAB_BASEURL=
 EOF

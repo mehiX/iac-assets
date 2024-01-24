@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"os"
+	"path/filepath"
 
 	"git.lpc.logius.nl/logius/open/dgp/launchpad/iac-assets/pkg/sources/gitlab"
 	"git.lpc.logius.nl/logius/open/dgp/launchpad/iac-assets/pkg/sources/vcloud"
@@ -31,26 +32,23 @@ func Execute() error {
 	return cmdRoot.Execute()
 }
 
-func getVCloudCollector() *vcloud.Collector {
-	return &vcloud.Collector{
-		Username: os.Getenv("PICARD_USER"),
-		Password: os.Getenv("PICARD_PASSWORD"),
-	}
-}
-
 func getGitlabCollectore() *gitlab.Collector {
 	return &gitlab.Collector{
 		Token:   os.Getenv("GITLAB_TOKEN"),
 		BaseURL: os.Getenv("GITLAB_BASEURL"),
 	}
 }
-func getVCloudSources() (vCloudSrc []vcloud.Source) {
+func getVCloudSources() []vcloud.Source {
 
-	type config struct {
-		VCloud map[string][]string `json:"vcloud"`
+	type vcsources struct {
+		Sources []vcloud.Source `json:"sources"`
 	}
 
-	b, err := os.ReadFile(configFile)
+	type config struct {
+		VCloud vcsources `json:"vcloud"`
+	}
+
+	b, err := os.ReadFile(filepath.Clean(configFile))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -60,18 +58,10 @@ func getVCloudSources() (vCloudSrc []vcloud.Source) {
 		log.Fatal(err)
 	}
 
-	ep := cfg.VCloud["endpoints"]
-	tenants := cfg.VCloud["tenants"]
-
-	for _, t := range tenants {
-		src := vcloud.Source{Endpoints: ep, Tenant: t}
-		vCloudSrc = append(vCloudSrc, src)
-	}
-
-	return
+	return cfg.VCloud.Sources
 }
 
-func getGitlabSources() (src []gitlab.Source) {
+func getGitlabSources() []gitlab.Source {
 
 	type gsources struct {
 		Sources []gitlab.Source `json:"sources"`
@@ -80,7 +70,7 @@ func getGitlabSources() (src []gitlab.Source) {
 		Gitlab gsources `json:"gitlab"`
 	}
 
-	b, err := os.ReadFile(configFile)
+	b, err := os.ReadFile(filepath.Clean(configFile))
 	if err != nil {
 		log.Fatal(err)
 	}
