@@ -6,15 +6,6 @@ View IAC assests as they are configured in:
 
 ## Configuration
 
-Clone the project and create `.env`:
-
-```shell
-cat > .env <<EOF
-GITLAB_TOKEN=
-GITLAB_BASEURL=
-EOF
-```
-
 Create a configuration file to hold sources definitions and populate it with your information:
 
 ```shell

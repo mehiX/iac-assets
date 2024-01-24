@@ -10,7 +10,6 @@ import (
 	"git.lpc.logius.nl/logius/open/dgp/launchpad/iac-assets/pkg/sources/gitlab"
 	"git.lpc.logius.nl/logius/open/dgp/launchpad/iac-assets/pkg/sources/vcloud"
 
-	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
 )
 
@@ -22,8 +21,6 @@ var cmdRoot = &cobra.Command{
 }
 
 func init() {
-	godotenv.Load()
-
 	cmdRoot.AddCommand(cmdGitlab, cmdVcloud, cmdServeHttp)
 	cmdRoot.PersistentFlags().StringVarP(&configFile, "config", "c", "config.json", "Location for the configuration file")
 }
@@ -32,12 +29,6 @@ func Execute() error {
 	return cmdRoot.Execute()
 }
 
-func getGitlabCollectore() *gitlab.Collector {
-	return &gitlab.Collector{
-		Token:   os.Getenv("GITLAB_TOKEN"),
-		BaseURL: os.Getenv("GITLAB_BASEURL"),
-	}
-}
 func getVCloudSources() []vcloud.Source {
 
 	type vcsources struct {

@@ -9,12 +9,9 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type Collector struct {
-	BaseURL string
-	Token   string
-}
-
 type Source struct {
+	BaseURL  string `json:"baseurl"`
+	Token    string `json:"token"`
 	Tenant   string `json:"tenant"`
 	Project  string `json:"project"`
 	Ref      string `json:"ref"`
@@ -27,28 +24,28 @@ type Result struct {
 	Error    error
 }
 
-func (c *Collector) ReadFile(src Source) (*gitlab.File, error) {
-	git, err := gitlab.NewClient(c.Token, gitlab.WithBaseURL(c.BaseURL))
+func (s Source) ReadFile() (*gitlab.File, error) {
+	git, err := gitlab.NewClient(s.Token, gitlab.WithBaseURL(s.BaseURL))
 	if err != nil {
 		return nil, err
 	}
 
 	gf := &gitlab.GetFileOptions{
-		Ref: gitlab.Ptr(src.Ref),
+		Ref: gitlab.Ptr(s.Ref),
 	}
 
-	f, _, err := git.RepositoryFiles.GetFile(src.Project, src.Filepath, gf)
+	f, _, err := git.RepositoryFiles.GetFile(s.Project, s.Filepath, gf)
 
 	return f, err
 }
 
-func (c *Collector) Query(src Source) Result {
+func (s Source) Query() Result {
 
-	slog.Info("query gitlab", "tenant", src.Tenant)
+	slog.Info("query gitlab", "tenant", s.Tenant)
 
 	var zones Zones
 
-	f, err := c.ReadFile(src)
+	f, err := s.ReadFile()
 	if err != nil {
 		return Result{Error: err}
 	}

@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 
+	"git.lpc.logius.nl/logius/open/dgp/launchpad/iac-assets/pkg/sources/gitlab"
 	"git.lpc.logius.nl/logius/open/dgp/launchpad/iac-assets/pkg/sources/vcloud"
 	"github.com/go-chi/chi/v5"
 	"github.com/spf13/cobra"
@@ -58,9 +59,8 @@ func handleGetJsonData(w http.ResponseWriter, r *http.Request) {
 	var data any
 	switch src {
 	case "gitlab":
-		coll := getGitlabCollectore()
 		src := getGitlabSources()
-		data = coll.Collect(src...)
+		data = gitlab.Collect(src...)
 	case "vcloud":
 		src := getVCloudSources()
 		data = vcloud.Collect(src...)
@@ -90,9 +90,8 @@ func handleGetHtmlData() http.HandlerFunc {
 		var data any
 		switch src {
 		case "gitlab":
-			coll := getGitlabCollectore()
 			src := getGitlabSources()
-			data = coll.Collect(src...)
+			data = gitlab.Collect(src...)
 		case "vcloud":
 			src := getVCloudSources()
 			data = vcloud.Collect(src...)

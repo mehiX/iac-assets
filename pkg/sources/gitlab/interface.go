@@ -18,14 +18,14 @@ type AggregatedResult struct {
 	MemorySizeGB int
 }
 
-func (c *Collector) Collect(src ...Source) PrettyResults {
+func Collect(src ...Source) PrettyResults {
 
 	ch := make(chan PrettyResult)
 
 	querySrc := func(wg *sync.WaitGroup, i int) {
 		defer wg.Done()
 
-		res := c.Query(src[i])
+		res := src[i].Query()
 		if res.Error != nil {
 			ch <- PrettyResult{
 				Tenant:   src[i].Tenant,
