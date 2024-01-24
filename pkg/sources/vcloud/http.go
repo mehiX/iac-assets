@@ -13,7 +13,7 @@ type PrettyResult struct {
 	Tenant     string
 	Machines   []VM
 	Aggregates AggregatedResult
-	Error      error
+	Error      string
 }
 
 type AggregatedResult struct {
@@ -39,9 +39,17 @@ func (c *Collector) Collect(src ...Source) PrettyResults {
 			go func(ep, t string) {
 
 				res := c.Query(ep, t)
+				if res.Error != nil {
+					results <- PrettyResult{
+						Name:     endpointName(ep),
+						Tenant:   t,
+						Error:    res.Error.Error(),
+						Endpoint: ep,
+					}
+					return
+				}
 				pr := PrettyResult{
 					Machines:   res.VirtualMachines,
-					Error:      res.Error,
 					Name:       endpointName(ep),
 					Endpoint:   ep,
 					Tenant:     t,
