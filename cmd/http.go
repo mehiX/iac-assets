@@ -14,18 +14,17 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const defaultAddr = "127.0.0.1:8080"
+var addr string
+
+func init() {
+	cmdServeHttp.PersistentFlags().StringVar(&addr, "addr", "127.0.0.1:8080", "Address for the HTTP server")
+}
 
 var cmdServeHttp = &cobra.Command{
 	Use:   "serve",
 	Long:  "Serve results over HTTP",
 	Short: "Serve results over HTTP",
 	Run: func(cmd *cobra.Command, args []string) {
-		addr := defaultAddr
-		if len(args) > 0 {
-			addr = args[0]
-		}
-
 		srvr := http.Server{
 			Addr:    addr,
 			Handler: handler(),
