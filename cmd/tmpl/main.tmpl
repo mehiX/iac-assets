@@ -1,14 +1,19 @@
 {{ define "vcloud_main" }}
 <html>
 <head>
-    <title>IOC Machines (VCLOUD)</title>
-    {{ template "styles" }}
+    <title>IOC Machines (VMWare Cloud Directory)</title>
+    {{ template "header" }}
 </head>
 <body>
-    <div class="container">
-    <p><a href="/gitlab/html">Gitlab</a></p>
+    <div class="ui main container">
+    <div class="ui inverted top fixed menu">
+        <a class="header item" href="/">IAC Assets</a>
+        <a class="item" href="/gitlab/html">Gitlab</a>
+        <div class="item active">VMWare Cloud</div>
+    </div>
     {{ template "vcloud" . }}
     </div>
+    {{ template "footer" }}
 </body>
 </html>
 {{ end }}
@@ -17,13 +22,19 @@
 <html>
 <head>
     <title>IOC Machines (Gitlab)</title>
-    {{ template "styles" }}
+    {{ template "header" }}
 </head>
 <body>
-    <div class="container">
-    <p><a href="/vcloud/html">VMWare Cloud Directory</a></p>
+    <div class="ui main container">
+    <div class="ui inverted top fixed menu">
+        <a class="header item" href="/">IAC Assets</a>
+        <div class="item active">Gitlab</div>
+        <a class="item" href="/vcloud/html">VMWare Cloud</a>
+    </div>
     {{ template "gitlab" . }}
     </div>
+    {{ template "footer" }}
 </body>
 </html>
 {{ end }}
+

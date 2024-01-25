@@ -16,21 +16,19 @@ type PrettyResult struct {
 	Error      string
 }
 
+type PrettyResults []PrettyResult
+
 type AggregatedResult struct {
 	CPUs      int
 	Memory    int
 	StorageMB int
 }
 
-type PrettyResults []PrettyResult
-
 func Collect(src ...Source) PrettyResults {
 
 	ch := make(chan PrettyResult)
 
-	var wg sync.WaitGroup
-
-	querySrc := func(i int) {
+	querySrc := func(wg *sync.WaitGroup, i int) {
 		defer wg.Done()
 
 		ep := src[i].Endpoint
@@ -56,9 +54,10 @@ func Collect(src ...Source) PrettyResults {
 		ch <- pr
 	}
 
+	var wg sync.WaitGroup
 	wg.Add(len(src))
 	for i := range src {
-		go querySrc(i)
+		go querySrc(&wg, i)
 	}
 
 	go func() {

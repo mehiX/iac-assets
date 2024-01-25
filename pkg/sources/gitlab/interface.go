@@ -1,6 +1,10 @@
 package gitlab
 
-import "sync"
+import (
+	"errors"
+	"io"
+	"sync"
+)
 
 type PrettyResult struct {
 	Zone       string
@@ -27,10 +31,14 @@ func Collect(src ...Source) PrettyResults {
 
 		res := src[i].Query()
 		if res.Error != nil {
+			err := res.Error.Error()
+			if errors.Is(res.Error, io.EOF) {
+				err = "Target file is empty"
+			}
 			ch <- PrettyResult{
 				Tenant:   src[i].Tenant,
 				CommitID: string(res.CommitID[:min(8, len(res.CommitID))]),
-				Error:    res.Error.Error(),
+				Error:    err,
 			}
 			return
 		}

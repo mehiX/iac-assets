@@ -1,58 +1,67 @@
 {{ define "vcloud"}}
+<div class="ui accordion">
 {{ range . }}
-    {{ if ne .Error "" }}
-        <p style="color: red">{{ .Tenant }} ({{ .Name }}): {{ .Error }}</p>
-    {{ else }}
-        <table>
-        <caption>
-            {{ .Tenant }} ({{ .Name }}) 
+    <div class="title">
+        <i class="dropdown icon"></i>
+        {{ .Tenant }} ({{ .Name }}) 
             [VMs: {{ len .Machines }}, CPUs: {{ .Aggregates.CPUs }}, Mem: {{ .Aggregates.Memory }}, Storage: {{ .Aggregates.StorageMB }}MB]
-        </caption>
-        <thead>
-            <tr>
-                <th>VPC name</th>
-                <th>VM name</th>
-                <th>CPUs</th>
-                <th>Memory</th>
-                <th>Storage (MB)</th>
-                <th>Storage Profile</th>
-                <th>OS</th>
-                <th>Status</th>
-                <th>Placement Policy</th>
-                <th>Sizing Policy</th>
-            </tr>
-        </thead>
-        <tbody>
-        {{ range .Machines }}
-            <tr>
-                <td>{{ .VPCName }}</td>
-                <td>{{ .VMName }}</td>
-                <td>{{ .CPUs }}</td>
-                <td>{{ .Memory }}</td>
-                <td>{{ .Storage }}</td>
-                <td>{{ .StorageProfile }}</td>
-                <td>{{ .OS }}</td>
-                <td>{{ .Status }}</td>
-                <td>{{ .PlacementPolicy }}</td>
-                <td>{{ .SizingPolicy }}</td>
-            </tr>
+    </div>
+    <div class="content">
+        {{ if ne .Error "" }}
+            <p style="color: red">Error: {{ .Error }}</p>
+        {{ else }}
+        {{ if eq (len .Machines) 0 }}
+        (no data)
+        {{ else }}
+            <table class="ui striped celled table">
+            <thead>
+                <tr>
+                    <th>VPC name</th>
+                    <th>VM name</th>
+                    <th class="right aligned">CPUs</th>
+                    <th class="right aligned">Memory</th>
+                    <th class="right aligned">Storage (MB)</th>
+                    <th>Storage Profile</th>
+                    <th>OS</th>
+                    <th>Status</th>
+                    <th>Placement Policy</th>
+                    <th>Sizing Policy</th>
+                </tr>
+            </thead>
+            <tbody>
+            {{ range .Machines }}
+                <tr>
+                    <td>{{ .VPCName }}</td>
+                    <td>{{ .VMName }}</td>
+                    <td class="right aligned">{{ .CPUs }}</td>
+                    <td class="right aligned">{{ .Memory }}</td>
+                    <td class="right aligned">{{ .Storage }}</td>
+                    <td>{{ .StorageProfile }}</td>
+                    <td>{{ .OS }}</td>
+                    <td>{{ .Status }}</td>
+                    <td>{{ .PlacementPolicy }}</td>
+                    <td>{{ .SizingPolicy }}</td>
+                </tr>
+            {{ end }}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th></th>
+                    <th></th>
+                    <th class="right aligned">{{ .Aggregates.CPUs }}</th>
+                    <th class="right aligned">{{ .Aggregates.Memory }}</th>
+                    <th class="right aligned">{{ .Aggregates.StorageMB }}</th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                </tr>
+            </tfoot>
+            </table>
         {{ end }}
-        </tbody>
-        <tfoot>
-            <tr>
-                <td></td>
-                <td></td>
-                <td>{{ .Aggregates.CPUs }}</td>
-                <td>{{ .Aggregates.Memory }}</td>
-                <td>{{ .Aggregates.StorageMB }}</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-        </tfoot>
-        </table>
     {{ end }}
+    </div>
 {{ end }}
+</div>
 {{ end }}

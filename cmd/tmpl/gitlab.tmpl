@@ -1,52 +1,61 @@
 {{ define "gitlab"}}
+<div class="ui accordion">
 {{ range . }}
-    {{ if ne .Error "" }}
-        <p style="color: red">{{ .Tenant }} ({{ .CommitID }}): {{ .Error }}</p>
-    {{ else }}
-        <table>
-        <caption>
-            {{ .Tenant }} - {{ .Zone }} ({{ .CommitID }}) 
+    <div class="title">
+        <i class="dropdown icon"></i>
+        {{ .Tenant }} - {{ .Zone }} ({{ .CommitID }}) 
             [VMs: {{ len .Machines }}, CPUs: {{ .Aggregates.CpuCount }}, Mem: {{ .Aggregates.MemorySizeGB }}GB]
-        </caption>
-        <thead>
-            <tr>
-                <th></th>
-                <th></th>
-                <th>Name</th>
-                <th>IP last octet</th>
-                <th>Tier</th>
-                <th>CPU Count</th>
-                <th>CPU per socket</th>
-                <th>Memory size (GB)</th>
-            </tr>
-        </thead>
-        <tbody>
-        {{ range .Machines }}
-            <tr>
-                <td>{{ .VAppsName }}</td>
-                <td>{{ .VAppName }}</td>
-                <td>{{ .Name }}</td>
-                <td>{{ .IPLastOctet }}</td>
-                <td>{{ .Tier }}</td>
-                <td>{{ .CpuCount }}</td>
-                <td>{{ .CpuPerSocket }}</td>
-                <td>{{ .MemorySizeGB }}</td>
-            </tr>
+    </div>
+    <div class="content">
+        {{ if ne .Error "" }}
+            <p style="color: red">Error: {{ .Error }}</p>
+        {{ else }}
+        {{ if eq (len .Machines) 0 }}
+        (no data)
+        {{ else }}
+            <table class="ui striped celled table">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th></th>
+                    <th>Name</th>
+                    <th class="right aligned">IP last octet</th>
+                    <th class="center aligned">Tier</th>
+                    <th class="right aligned">CPU Count</th>
+                    <th class="right aligned">CPU per socket</th>
+                    <th class="right aligned">Memory size (GB)</th>
+                </tr>
+            </thead>
+            <tbody>
+            {{ range .Machines }}
+                <tr>
+                    <td>{{ .VAppsName }}</td>
+                    <td>{{ .VAppName }}</td>
+                    <td>{{ .Name }}</td>
+                    <td class="right aligned">{{ .IPLastOctet }}</td>
+                    <td class="center aligned">{{ .Tier }}</td>
+                    <td class="right aligned">{{ .CpuCount }}</td>
+                    <td class="right aligned">{{ .CpuPerSocket }}</td>
+                    <td class="right aligned">{{ .MemorySizeGB }}</td>
+                </tr>
+            {{ end }}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th class="right aligned">{{ .Aggregates.CpuCount }}</th>
+                    <th></th>
+                    <th class="right aligned">{{ .Aggregates.MemorySizeGB }}</th>
+                </tr>
+            </tfoot>
+            </table>
         {{ end }}
-        </tbody>
-        <tfoot>
-            <tr>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td>{{ .Aggregates.CpuCount }}</td>
-                <td></td>
-                <td>{{ .Aggregates.MemorySizeGB }}</td>
-            </tr>
-        </tfoot>
-        </table>
     {{ end }}
+    </div>
 {{ end }}
+</div>
 {{ end }}
