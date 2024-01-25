@@ -12,6 +12,8 @@ Create a configuration file to hold sources definitions and populate it with you
 cp config.tmpl config.json
 ```
 
+For Gitlab get a token [here](https://git.lpc.logius.nl/-/profile/personal_access_tokens) with scope `read_api`.
+
 ## Run
 
 Create a binary:

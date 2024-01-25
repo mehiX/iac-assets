@@ -34,6 +34,8 @@ func Collect(src ...Source) PrettyResults {
 			err := res.Error.Error()
 			if errors.Is(res.Error, io.EOF) {
 				err = "Target file is empty"
+			} else if src[i].Tenant == "" || src[i].Token == "" || src[i].BaseURL == "" {
+				err = "Missing or wrong configuration. Please check the config file (default: config.json)"
 			}
 			ch <- PrettyResult{
 				Tenant:   src[i].Tenant,
