@@ -1,5 +1,22 @@
 package vcloud
 
+type Result struct {
+	Tenant     string
+	Name       string
+	Endpoint   string
+	Machines   []VM
+	Aggregates AggregatedResult
+	Error      string
+}
+
+type Results []Result
+
+type AggregatedResult struct {
+	CPUs      int
+	Memory    int
+	StorageMB int
+}
+
 type VM struct {
 	Tenant          string // The name of the tenant this VM belongs to
 	VPCName         string // The name of the VPC this VM belongs to

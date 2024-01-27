@@ -7,57 +7,14 @@ import (
 	"sync"
 )
 
-type PrettyResult struct {
-	Name       string
-	Endpoint   string
-	Tenant     string
-	Machines   []VM
-	Aggregates AggregatedResult
-	Error      string
-}
+func Collect(src ...Source) Results {
 
-type PrettyResults []PrettyResult
-
-type AggregatedResult struct {
-	CPUs      int
-	Memory    int
-	StorageMB int
-}
-
-func Collect(src ...Source) PrettyResults {
-
-	ch := make(chan PrettyResult)
-
-	querySrc := func(wg *sync.WaitGroup, i int) {
-		defer wg.Done()
-
-		ep := src[i].Endpoint
-		t := src[i].Tenant
-
-		res := src[i].Query()
-		if res.Error != nil {
-			ch <- PrettyResult{
-				Name:     endpointName(ep),
-				Tenant:   t,
-				Error:    res.Error.Error(),
-				Endpoint: ep,
-			}
-			return
-		}
-		pr := PrettyResult{
-			Machines:   res.VirtualMachines,
-			Name:       endpointName(ep),
-			Endpoint:   ep,
-			Tenant:     t,
-			Aggregates: aggregate(res.VirtualMachines),
-		}
-		ch <- pr
-	}
+	ch := make(chan Result)
 
 	var wg sync.WaitGroup
 	wg.Add(len(src))
 	for i := range src {
-		go querySrc(&wg, i)
+		go querySrc(&wg, ch, src[i])
 	}
 
 	go func() {
@@ -65,13 +22,41 @@ func Collect(src ...Source) PrettyResults {
 		close(ch)
 	}()
 
-	results := make(PrettyResults, 0)
+	results := make(Results, 0)
 
 	for res := range ch {
 		results = append(results, res)
 	}
 
 	return results
+}
+
+func querySrc(wg *sync.WaitGroup, out chan<- Result, src Source) {
+	defer wg.Done()
+
+	res := src.Query()
+	pres := toResult(res)
+	out <- pres
+}
+
+func toResult(res Response) Result {
+	if res.Error != nil {
+		return Result{
+			Name:     endpointName(res.Endpoint),
+			Tenant:   res.Tenant,
+			Error:    res.Error.Error(),
+			Endpoint: res.Endpoint,
+		}
+	}
+
+	return Result{
+		Machines:   res.VirtualMachines,
+		Name:       endpointName(res.Endpoint),
+		Endpoint:   res.Endpoint,
+		Tenant:     res.Tenant,
+		Aggregates: aggregate(res.VirtualMachines),
+	}
+
 }
 
 func endpointName(ep string) string {

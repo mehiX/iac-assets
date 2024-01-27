@@ -18,7 +18,7 @@ type Source struct {
 	Filepath string `json:"filepath"`
 }
 
-type Result struct {
+type Response struct {
 	CommitID string
 	Zones    Zones
 	Error    error
@@ -39,7 +39,7 @@ func (s Source) ReadFile() (*gitlab.File, error) {
 	return f, err
 }
 
-func (s Source) Query() Result {
+func (s Source) Query() Response {
 
 	slog.Info("query gitlab", "tenant", s.Tenant)
 
@@ -47,21 +47,21 @@ func (s Source) Query() Result {
 
 	f, err := s.ReadFile()
 	if err != nil {
-		return Result{Error: err}
+		return Response{Error: err}
 	}
 
 	contents := f.Content
 	if f.Encoding == "base64" {
 		content, err := base64.StdEncoding.DecodeString(f.Content)
 		if err != nil {
-			return Result{Error: err}
+			return Response{Error: err}
 		}
 		contents = string(content)
 	}
 
 	err = yaml.NewDecoder(bytes.NewReader([]byte(contents))).Decode(&zones)
 
-	return Result{
+	return Response{
 		CommitID: f.LastCommitID,
 		Zones:    zones,
 		Error:    err}

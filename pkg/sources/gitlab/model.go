@@ -1,12 +1,28 @@
 package gitlab
 
+type Result struct {
+	Tenant     string
+	Zone       string
+	CommitID   string
+	Machines   []FlatStructMachine
+	Aggregates AggregatedResult
+	Error      string
+}
+
+type Results []Result
+
+type AggregatedResult struct {
+	CpuCount     int
+	MemorySizeGB int
+}
+
 type FlatStructMachine struct {
-	IPLastOctet  string `yaml:"ip_last_octet"`
-	Tier         int    `yaml:"tier"`
-	CpuCount     int    `yaml:"cpu_count"`
-	CpuPerSocket int    `yaml:"cpu_per_socker"`
-	MemorySizeGB int    `yaml:"memory_size_gb"`
-	Disks        []Disk `yaml:"disks"`
+	IPLastOctet  string `json:"ip_last_octet"`
+	Tier         int    `json:"tier"`
+	CpuCount     int    `json:"cpu_count"`
+	CpuPerSocket int    `json:"cpu_per_socker"`
+	MemorySizeGB int    `json:"memory_size_gb"`
+	Disks        []Disk `json:"disks"`
 	Name         string `json:"name"`
 	VAppName     string `json:"vapp"`
 	VAppsName    string `json:"vapps"`
