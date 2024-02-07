@@ -1,5 +1,10 @@
 package vcloud
 
+import (
+	"fmt"
+	"strings"
+)
+
 type Result struct {
 	Tenant     string
 	Name       string
@@ -10,6 +15,35 @@ type Result struct {
 }
 
 type Results []Result
+
+func (r Results) Records() [][]string {
+	header := strings.Split("tenant,vpc_name,vm_name,cpus,memory,storage,storage_profile,os,status,placement_policy,sizing_policy,creation_date,endpoint", ",")
+
+	recs := make([][]string, 0)
+	recs = append(recs, header)
+	for _, res := range r {
+		for _, m := range res.Machines {
+			rec := []string{
+				res.Tenant,
+				m.VPCName,
+				m.VMName,
+				fmt.Sprintf("%d", m.CPUs),
+				fmt.Sprintf("%d", m.Memory),
+				m.Storage,
+				m.StorageProfile,
+				m.OS,
+				m.Status,
+				m.PlacementPolicy,
+				m.SizingPolicy,
+				m.CreationDate,
+				res.Endpoint,
+			}
+			recs = append(recs, rec)
+		}
+	}
+
+	return recs
+}
 
 type AggregatedResult struct {
 	CPUs      int

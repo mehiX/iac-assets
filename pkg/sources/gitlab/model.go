@@ -1,5 +1,10 @@
 package gitlab
 
+import (
+	"fmt"
+	"strings"
+)
+
 type Result struct {
 	Tenant     string
 	Zone       string
@@ -10,6 +15,33 @@ type Result struct {
 }
 
 type Results []Result
+
+// Records ingores Disks for now waiting for a decision how to represent it(multiple lines, all in the same cell)
+func (r Results) Records() [][]string {
+	header := strings.Split("tenant,zone,v_apps_name,v_app_name,ip_last_octet,tier,cpu_count,cpu_per_socket,memory_size_gb,commitTS", ",")
+
+	recs := make([][]string, 0)
+	recs = append(recs, header)
+	for _, res := range r {
+		for _, m := range res.Machines {
+			rec := []string{
+				res.Tenant,
+				res.Zone,
+				m.VAppsName,
+				m.VAppName,
+				m.IPLastOctet,
+				fmt.Sprintf("%d", m.Tier),
+				fmt.Sprintf("%d", m.CpuCount),
+				fmt.Sprintf("%d", m.CpuPerSocket),
+				fmt.Sprintf("%d", m.MemorySizeGB),
+				res.CommitID,
+			}
+			recs = append(recs, rec)
+		}
+	}
+
+	return recs
+}
 
 type AggregatedResult struct {
 	CpuCount     int

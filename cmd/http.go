@@ -2,11 +2,13 @@ package cmd
 
 import (
 	"embed"
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"html/template"
 	"log"
 	"net/http"
+	"time"
 
 	"git.lpc.logius.nl/logius/open/dgp/launchpad/iac-assets/pkg/sources/gitlab"
 	"git.lpc.logius.nl/logius/open/dgp/launchpad/iac-assets/pkg/sources/vcloud"
@@ -45,6 +47,7 @@ func handler() http.Handler {
 	m.Get("/", handleHome)
 	m.Get("/{src}/json", handleGetJsonData)
 	m.Get("/{src}/html", handleGetHtmlData())
+	m.Get("/{src}/csv", handleGetCsvData)
 	return m
 }
 
@@ -55,15 +58,8 @@ func handleHome(w http.ResponseWriter, r *http.Request) {
 func handleGetJsonData(w http.ResponseWriter, r *http.Request) {
 
 	src := chi.URLParam(r, "src")
-	var data any
-	switch src {
-	case "gitlab":
-		src := getGitlabSources()
-		data = gitlab.Collect(src...)
-	case "vcloud":
-		src := getVCloudSources()
-		data = vcloud.Collect(src...)
-	default:
+	data, err := getData(src)
+	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -76,6 +72,41 @@ func handleGetJsonData(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func handleGetCsvData(w http.ResponseWriter, r *http.Request) {
+	src := chi.URLParam(r, "src")
+	data, err := getData(src)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	csvData, err := toCsvData(data)
+	if err != nil {
+		log.Printf("Encoding Csv response: %s\n", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-type", "text/csv")
+	w.Header().Set("Content-Disposition", "attachment; filename="+fmt.Sprintf("%s_%v.csv", src, time.Now().Format("2006-01-02T150405")))
+	csvw := csv.NewWriter(w)
+	csvw.WriteAll(csvData)
+	csvw.Flush()
+}
+
+func toCsvData(data any) ([][]string, error) {
+
+	switch t := data.(type) {
+	case gitlab.Results:
+		res := gitlab.Results(t)
+		return res.Records(), nil
+	case vcloud.Results:
+		res := vcloud.Results(t)
+		return res.Records(), nil
+	default:
+		return nil, fmt.Errorf("unknown data type: %T", t)
+	}
+}
 func handleGetHtmlData() http.HandlerFunc {
 	tmpl, err := template.ParseFS(htmlTemplates, "**/*.tmpl")
 	if err != nil {
@@ -86,15 +117,8 @@ func handleGetHtmlData() http.HandlerFunc {
 		w.Header().Set("Content-type", "text/html")
 
 		src := chi.URLParam(r, "src")
-		var data any
-		switch src {
-		case "gitlab":
-			src := getGitlabSources()
-			data = gitlab.Collect(src...)
-		case "vcloud":
-			src := getVCloudSources()
-			data = vcloud.Collect(src...)
-		default:
+		data, err := getData(src)
+		if err != nil {
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
@@ -104,4 +128,20 @@ func handleGetHtmlData() http.HandlerFunc {
 			return
 		}
 	}
+}
+
+func getData(src string) (any, error) {
+	var data any
+	switch src {
+	case "gitlab":
+		src := getGitlabSources()
+		data = gitlab.Collect(src...)
+	case "vcloud":
+		src := getVCloudSources()
+		data = vcloud.Collect(src...)
+	default:
+		return nil, fmt.Errorf("unknown source %s", src)
+	}
+
+	return data, nil
 }
