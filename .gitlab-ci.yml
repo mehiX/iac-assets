@@ -29,6 +29,7 @@ compile:
       - dist
 
 .deploy:
+  image: safenetlabs/k8s-cicd:1.0.11-22
   stage: deploy
   script: 
     - |
