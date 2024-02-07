@@ -10,7 +10,7 @@ variables:
   REGISTRY_SERVER_AZ2: harbor.cicd-p-az2.l12m.nl
   REGISTRY_PROJECT: "dgp"
   IMAGE_NAME: "iac-assets" 
-  NAMESPACE: "launchpads"
+  NAMESPACE: "launchpad"
 
 format:
   stage: test
@@ -40,7 +40,7 @@ compile:
         annotations:
           field.cattle.io/projectId: $(kubectl get ns dgp-ot-services -o jsonpath='{.metadata.annotations.field\.cattle\.io\/projectId}')
           field.cattle.io/resourceQuota: '{"limit":{"limitsCpu":"200m","limitsMemory":"2000Mi","requestsCpu":"150m","requestsMemory":"41000Mi","requestsStorage":"1Gi"}}'
-        name: ${S3_NAMESPACE}
+        name: ${NAMESPACE}
       EOF
 
 deploy-ot1:
