@@ -5,6 +5,13 @@ stages:
   - build
   - deploy
 
+variables:
+  REGISTRY_SERVER_AZ1: harbor.cicd-p-az1.l12m.nl
+  REGISTRY_SERVER_AZ2: harbor.cicd-p-az2.l12m.nl
+  REGISTRY_PROJECT: "dgp"
+  IMAGE_NAME: "iac-assets" 
+  NAMESPACE: "launchpads"
+
 format:
   stage: test
   script:
@@ -21,7 +28,34 @@ compile:
     paths:
       - dist
 
-deploy:
+.deploy:
   stage: deploy
-  script: echo "Define your deployment script!"
-  environment: production
+  script: 
+    - |
+      kubectl get ns ${NAMESPACE} || kubectl create -f - <<EOF
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        annotations:
+          field.cattle.io/projectId: $(kubectl get ns dgp-ot-services -o jsonpath='{.metadata.annotations.field\.cattle\.io\/projectId}')
+          field.cattle.io/resourceQuota: '{"limit":{"limitsCpu":"200m","limitsMemory":"2000Mi","requestsCpu":"150m","requestsMemory":"41000Mi","requestsStorage":"1Gi"}}'
+        name: ${S3_NAMESPACE}
+      EOF
+
+deploy-ot1:
+  variables:
+    DOMAIN: ot-t-az1.l12m.nl
+    HARBOR_REPLICA_REGISTRY: $REGISTRY_SERVER_AZ1
+    DATA_CENTER_SUFFIX: az1
+  environment: ot-t-az1.dgp-ot
+  extends: 
+    - .deploy 
+
+deploy-ot2:
+  variables:
+    DOMAIN: ot-t-az2.l12m.nl
+    HARBOR_REPLICA_REGISTRY: $REGISTRY_SERVER_AZ2
+    DATA_CENTER_SUFFIX: az2
+  environment: ot-t-az2.dgp-ot
+  extends: 
+    - .deploy 
