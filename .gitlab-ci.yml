@@ -45,7 +45,7 @@ prepare:
 
 .deploy:
   image: alpine/helm:latest
-  needs: prepare
+  needs: ["prepare"]
   before_script:
     - echo "Custom variables file:${CUSTOM_VARS_FILE}"
     - echo "Namespace:${NAMESPACE}"
