@@ -1,5 +1,13 @@
 image: golang:latest
 
+#
+# GitLab Build Pipeline
+#
+# Predefined GitLab variables see https://docs.gitlab.com/ee/ci/variables/predefined_variables.html
+#
+include:
+  - template: Security/SAST.gitlab-ci.yml
+
 stages:
   - test
   - build
@@ -47,15 +55,10 @@ build-image:
         "%s":{"username":"%s","password":"%s"}, 
         "%s":{"username":"%s","password":"%s"}, 
         "%s":{"username":"%s","password":"%s"}
-        }, "proxies":{
-        "http-proxy":"%s",
-        "https-proxy":"%s",
-        "no-proxy":"%s"
         }}' 
         $REGISTRY_SERVER_AZ1 $HARBOR_ROBOT_NAME_AZ1 $(echo -n "$HARBOR_ROBOT_SECRET_AZ1" | base64 -d)
         $REGISTRY_SERVER_AZ2 $HARBOR_ROBOT_NAME_AZ2 $(echo -n "$HARBOR_ROBOT_SECRET_AZ2" | base64 -d)
         $CI_REGISTRY $CI_REGISTRY_USER $CI_REGISTRY_PASSWORD
-        $http_proxy $https_proxy $no_proxy
         > /kaniko/.docker/config.json
     
     # Run Kaniko (caching layers in GitLab registry, final image in Harbor)
