@@ -10,6 +10,8 @@ ARG HTTPS_PROXY
 #COPY ./certs/* /usr/local/share/ca-certificates/
 #RUN cat /usr/local/share/ca-certificates/logius* >> /etc/ssl/certs/ca-certificates.crt
 
+RUN env
+
 RUN apk add --no-cache git
 WORKDIR /go/src/app
 COPY . .
