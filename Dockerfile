@@ -25,9 +25,9 @@ ARG HTTPS_PROXY
 ENV HTTPS_PROXY=${HTTPS_PROXY}
 ENV HTTP_PROXY=${HTTP_PROXY}
 
-COPY --from=builder /etc/ssl/certs /etc/ssl/certs
+#COPY --from=builder /etc/ssl/certs /etc/ssl/certs
+RUN apk --no-cache add ca-certificates
 
-RUN apk --no-cache add ca-certificates curl
 COPY --from=builder /go/bin/app /app
 ENTRYPOINT ["/app"]
 CMD ["serve", "--addr", "0.0.0.0:80"]
