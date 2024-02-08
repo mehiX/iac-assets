@@ -96,10 +96,10 @@ build-image:
     - echo "Namespace:${NAMESPACE}"
   script:
     - |
-      helm upgrade -i iax-assets ./k8s/iac-assets \
+      helm upgrade -i iac-assets ./k8s/iac-assets \
       -f ${CUSTOM_VARS_FILE}  \
       --set image.repository=${IMAGE_REPO} \
-      --set image.tag=${TAG}
+      --set image.tag=${TAG} \
       --namespace=${NAMESPACE}
 
 prepare-az1:
