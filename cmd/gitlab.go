@@ -1,9 +1,11 @@
 package cmd
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"os"
+	"time"
 
 	"git.lpc.logius.nl/logius/open/dgp/launchpad/iac-assets/pkg/sources/gitlab"
 	"github.com/spf13/cobra"
@@ -16,7 +18,10 @@ var cmdGitlab = &cobra.Command{
 
 		src := getGitlabSources()
 
-		if err := json.NewEncoder(os.Stdout).Encode(gitlab.Collect(src...)); err != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		defer cancel()
+
+		if err := json.NewEncoder(os.Stdout).Encode(gitlab.Collect(ctx, src...)); err != nil {
 			log.Fatalln(err)
 		}
 	},

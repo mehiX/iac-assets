@@ -1,20 +1,22 @@
 package vcloud
 
 import (
+	"context"
+	"log"
 	"net/url"
 	"strconv"
 	"strings"
 	"sync"
 )
 
-func Collect(src ...Source) Results {
+func Collect(ctx context.Context, src ...Source) Results {
 
 	ch := make(chan Result)
 
 	var wg sync.WaitGroup
 	wg.Add(len(src))
 	for i := range src {
-		go querySrc(&wg, ch, src[i])
+		go querySrc(ctx, &wg, ch, src[i])
 	}
 
 	go func() {
@@ -24,19 +26,31 @@ func Collect(src ...Source) Results {
 
 	results := make(Results, 0)
 
-	for res := range ch {
-		results = append(results, res)
+	for {
+		select {
+		case <-ctx.Done():
+			return results
+		case res, ok := <-ch:
+			if !ok {
+				return results
+			}
+			results = append(results, res)
+		}
 	}
 
-	return results
 }
 
-func querySrc(wg *sync.WaitGroup, out chan<- Result, src Source) {
+func querySrc(ctx context.Context, wg *sync.WaitGroup, out chan<- Result, src Source) {
 	defer wg.Done()
 
 	res := src.Query()
 	pres := toResult(res)
-	out <- pres
+
+	select {
+	case out <- pres:
+	case <-ctx.Done():
+		log.Println(ctx.Err())
+	}
 }
 
 func toResult(res Response) Result {

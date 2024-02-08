@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"embed"
 	"encoding/csv"
 	"encoding/json"
@@ -13,6 +14,7 @@ import (
 	"git.lpc.logius.nl/logius/open/dgp/launchpad/iac-assets/pkg/sources/gitlab"
 	"git.lpc.logius.nl/logius/open/dgp/launchpad/iac-assets/pkg/sources/vcloud"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/spf13/cobra"
 )
 
@@ -44,11 +46,40 @@ var htmlTemplates embed.FS
 
 func handler() http.Handler {
 	m := chi.NewRouter()
+
+	m.Use(middleware.RequestID)
+	m.Use(middleware.RealIP)
+	m.Use(middleware.Logger)
+	m.Use(middleware.Recoverer)
+
+	// Set a timeout value on the request context (ctx), that will signal
+	// through ctx.Done() that the request has timed out and further
+	// processing should be stopped.
+	m.Use(middleware.Timeout(60 * time.Second))
+
 	m.Get("/", handleHome)
+	m.Get("/health", func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusOK) })
 	m.Get("/{src}/json", handleGetJsonData)
 	m.Get("/{src}/html", handleGetHtmlData())
 	m.Get("/{src}/csv", handleGetCsvData)
+	m.Post("/setup/mehi", loadConfig)
 	return m
+}
+
+func loadConfig(w http.ResponseWriter, r *http.Request) {
+
+	var cfg Config
+	if err := json.NewDecoder(r.Body).Decode(&cfg); err != nil {
+		log.Printf("Decoding uploaded config: %v\n", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if cfg.IsValid() {
+		config = cfg
+	}
+
+	log.Println("Using new config")
 }
 
 func handleHome(w http.ResponseWriter, r *http.Request) {
@@ -124,6 +155,7 @@ func handleGetHtmlData() http.HandlerFunc {
 		}
 
 		if err := tmpl.ExecuteTemplate(w, src+"_main", data); err != nil {
+			log.Printf("Encoding VC html data: %v", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -131,14 +163,18 @@ func handleGetHtmlData() http.HandlerFunc {
 }
 
 func getData(src string) (any, error) {
+
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
 	var data any
 	switch src {
 	case "gitlab":
 		src := getGitlabSources()
-		data = gitlab.Collect(src...)
+		data = gitlab.Collect(ctx, src...)
 	case "vcloud":
 		src := getVCloudSources()
-		data = vcloud.Collect(src...)
+		data = vcloud.Collect(ctx, src...)
 	default:
 		return nil, fmt.Errorf("unknown source %s", src)
 	}

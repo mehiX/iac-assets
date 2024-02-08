@@ -1,12 +1,13 @@
 package gitlab
 
 import (
+	"context"
 	"errors"
 	"io"
 	"sync"
 )
 
-func Collect(src ...Source) Results {
+func Collect(ctx context.Context, src ...Source) Results {
 
 	ch := make(chan Result)
 
@@ -22,11 +23,19 @@ func Collect(src ...Source) Results {
 	}()
 
 	results := make(Results, 0)
-	for res := range ch {
-		results = append(results, res)
+
+	for {
+		select {
+		case <-ctx.Done():
+			return results
+		case res, ok := <-ch:
+			if !ok {
+				return results
+			}
+			results = append(results, res)
+		}
 	}
 
-	return results
 }
 
 func querySrc(wg *sync.WaitGroup, out chan<- Result, src Source) {

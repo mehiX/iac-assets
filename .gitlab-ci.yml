@@ -9,7 +9,8 @@ variables:
   REGISTRY_SERVER_AZ1: harbor.cicd-p-az1.l12m.nl
   REGISTRY_SERVER_AZ2: harbor.cicd-p-az2.l12m.nl
   REGISTRY_PROJECT: "dgp"
-  IMAGE_NAME: "iac-assets" 
+  IMAGE_NAME: "launchpad/iac-assets" 
+  TAG: "0.1"
   NAMESPACE: "launchpad"
 
 format:
@@ -27,6 +28,42 @@ compile:
   artifacts:
     paths:
       - dist
+
+build-image:
+  # https://docs.gitlab.com/ee/ci/docker/using_kaniko.html
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:${KANIKO_VERSION}-debug
+    entrypoint: [""]
+  only:
+    changes:
+      - Dockerfile
+      - "**/*.go"
+      - "cmd/tmpl/*.tmpl"
+  script:
+    # Provide Harbor and GitLab registry authorization 
+    - printf '{"auths":{ 
+        "%s":{"username":"%s","password":"%s"}, 
+        "%s":{"username":"%s","password":"%s"}, 
+        "%s":{"username":"%s","password":"%s"}
+        }}' 
+        $REGISTRY_SERVER_AZ1 $HARBOR_ROBOT_NAME_AZ1 $(echo -n "$HARBOR_ROBOT_SECRET_AZ1" | base64 -d)
+        $REGISTRY_SERVER_AZ2 $HARBOR_ROBOT_NAME_AZ2 $(echo -n "$HARBOR_ROBOT_SECRET_AZ2" | base64 -d)
+        $CI_REGISTRY $CI_REGISTRY_USER $CI_REGISTRY_PASSWORD
+        > /kaniko/.docker/config.json
+    
+    # Run Kaniko (caching layers in GitLab registry, final image in Harbor)
+    - /kaniko/executor 
+      --build-arg http_proxy=$https_proxy 
+      --build-arg https_proxy=$https_proxy 
+      --cache 
+      --cache-repo $CI_REGISTRY/$CI_PROJECT_PATH 
+      --context $CI_PROJECT_DIR 
+      --destination "${REGISTRY_SERVER_AZ1}/${REGISTRY_PROJECT}/${IMAGE_NAME}:${TAG}"
+      --destination "${REGISTRY_SERVER_AZ2}/${REGISTRY_PROJECT}/${IMAGE_NAME}:${TAG}"
+      --dockerfile $CI_PROJECT_DIR/Dockerfile 
+      --single-snapshot
+
 
 .prepare:
   image: safenetlabs/k8s-cicd:1.0.11-22

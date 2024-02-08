@@ -28,24 +28,30 @@ type Response struct {
 
 func (s Source) Query() Response {
 
-	slog.Info("query vcloud", "tenant", s.Tenant, "endpoint", s.Endpoint)
+	lg := slog.With("tenant", s.Tenant, "endpoint", s.Endpoint)
+
+	lg.Info("query vcloud")
 
 	u, err := url.ParseRequestURI(s.Endpoint)
 	if err != nil {
 		return Response{Error: fmt.Errorf("unable to parse url: %w", err)}
 	}
 
-	client := govcd.NewVCDClient(*u, s.Insecure)
+	client := govcd.NewVCDClient(*u, s.Insecure, govcd.WithHttpTimeout(10))
 	err = client.Authenticate(s.User, s.Password, s.Tenant)
 	if err != nil {
 		return Response{Error: err}
 	}
+	lg.Info("client authenticated")
+
+	defer client.Disconnect()
 
 	// Get the org (tenant)
 	org, err := client.GetOrgByName(s.Tenant)
 	if err != nil {
 		return Response{Error: err}
 	}
+	lg.Info("got tenant")
 
 	// Get the compute policies
 	computePolicies, err := org.GetAllVdcComputePolicies(url.Values{})
@@ -58,8 +64,9 @@ func (s Source) Query() Response {
 	if err != nil {
 		return Response{Error: err}
 	}
+	lg.Info("got vdc list", "size", len(vdcNames))
 
-	vmStream := make(chan VM)
+	vmStream := make(chan VM, 10)
 
 	var wg sync.WaitGroup
 	wg.Add(len(vdcNames))
@@ -71,6 +78,7 @@ func (s Source) Query() Response {
 			// Get the VDC
 			vdc, err := org.GetVDCByName(vdcName.Name, false)
 			if err != nil {
+				lg.Error("getting VDC by name", "error", err.Error())
 				vmStream <- VM{Tenant: s.Tenant, Error: err}
 				return
 			}
@@ -79,6 +87,7 @@ func (s Source) Query() Response {
 			var filter types.VmQueryFilter
 			vms, err := vdc.QueryVmList(filter)
 			if err != nil {
+				lg.Error("getting VM list", "error", err.Error())
 				vmStream <- VM{Tenant: s.Tenant, Error: err}
 				return
 			}
@@ -100,6 +109,7 @@ func (s Source) Query() Response {
 		vms = append(vms, vm)
 	}
 
+	lg.Info("reponding with VMS", "size", len(vms))
 	return Response{VirtualMachines: vms, Tenant: s.Tenant, Endpoint: s.Endpoint}
 }
 

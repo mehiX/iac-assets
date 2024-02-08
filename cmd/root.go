@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var configFile string
+var config Config
 
 var cmdRoot = &cobra.Command{
 	Use:  "iac",
@@ -22,7 +22,16 @@ var cmdRoot = &cobra.Command{
 
 func init() {
 	cmdRoot.AddCommand(cmdGitlab, cmdVcloud, cmdServeHttp)
-	cmdRoot.PersistentFlags().StringVarP(&configFile, "config", "c", "config.json", "Location for the configuration file")
+	configFile := cmdRoot.PersistentFlags().StringP("config", "c", "config.json", "Location for the configuration file")
+
+	b, err := os.ReadFile(filepath.Clean(*configFile))
+	if err != nil {
+		log.Println("Reading initial config: ", err)
+	} else {
+		if err := json.NewDecoder(bytes.NewReader(b)).Decode(&config); err != nil {
+			log.Println("Decoding initial config: ", err)
+		}
+	}
 }
 
 func Execute() error {
@@ -31,44 +40,27 @@ func Execute() error {
 
 func getVCloudSources() []vcloud.Source {
 
-	type vcsources struct {
-		Sources []vcloud.Source `json:"sources"`
-	}
-
-	type config struct {
-		VCloud vcsources `json:"vcloud"`
-	}
-
-	b, err := os.ReadFile(filepath.Clean(configFile))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	var cfg config
-	if err := json.NewDecoder(bytes.NewReader(b)).Decode(&cfg); err != nil {
-		log.Fatal(err)
-	}
-
-	return cfg.VCloud.Sources
+	return config.VCloud.Sources
 }
 
 func getGitlabSources() []gitlab.Source {
 
-	type gsources struct {
-		Sources []gitlab.Source `json:"sources"`
-	}
-	type config struct {
-		Gitlab gsources `json:"gitlab"`
-	}
+	return config.Gitlab.Sources
+}
 
-	b, err := os.ReadFile(filepath.Clean(configFile))
-	if err != nil {
-		log.Fatal(err)
-	}
-	var cfg config
-	if err := json.NewDecoder(bytes.NewReader(b)).Decode(&cfg); err != nil {
-		log.Fatal(err)
-	}
+type Config struct {
+	Gitlab GlabSources `json:"gitlab"`
+	VCloud VcSources   `json:"vcloud"`
+}
 
-	return cfg.Gitlab.Sources
+func (c Config) IsValid() bool {
+	return len(c.Gitlab.Sources) != 0 || len(c.VCloud.Sources) != 0
+}
+
+type VcSources struct {
+	Sources []vcloud.Source `json:"sources"`
+}
+
+type GlabSources struct {
+	Sources []gitlab.Source `json:"sources"`
 }
