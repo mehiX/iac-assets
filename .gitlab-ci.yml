@@ -28,7 +28,7 @@ compile:
     paths:
       - dist
 
-.deploy:
+prepare:
   image: safenetlabs/k8s-cicd:1.0.11-22
   stage: deploy
   script: 
@@ -43,20 +43,21 @@ compile:
         name: ${NAMESPACE}
       EOF
 
+.deploy:
+  image: alpine/helm:latest
+  needs: prepare
+  before_script:
+    - echo "Custom variables file:${CUSTOM_VARS_FILE}"
+    - echo "Namespace:${NAMESPACE}"
+  script:
+    - |
+      helm upgrade -i iax-assets ./k8s/iac-assets \
+      -f ${CUSTOM_VARS_FILE}  \
+      --namespace=${NAMESPACE}
+
 deploy-ot1:
   variables:
-    DOMAIN: ot-t-az1.l12m.nl
-    HARBOR_REPLICA_REGISTRY: $REGISTRY_SERVER_AZ1
-    DATA_CENTER_SUFFIX: az1
+    CUSTOM_VARS_FILE: ./kfk/values-ot-t-az1.yaml
   environment: ot-t-az1.dgp-ot
-  extends: 
-    - .deploy 
-
-deploy-ot2:
-  variables:
-    DOMAIN: ot-t-az2.l12m.nl
-    HARBOR_REPLICA_REGISTRY: $REGISTRY_SERVER_AZ2
-    DATA_CENTER_SUFFIX: az2
-  environment: ot-t-az2.dgp-ot
   extends: 
     - .deploy 
