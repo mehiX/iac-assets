@@ -18,7 +18,7 @@ variables:
   REGISTRY_SERVER_AZ2: harbor.cicd-p-az2.l12m.nl
   REGISTRY_PROJECT: "dgp"
   IMAGE_NAME: "launchpad/iac-assets" 
-  TAG: "0.2"
+  TAG: "0.3"
   NAMESPACE: "launchpad"
   KANIKO_VERSION: "v1.6.0"
 
