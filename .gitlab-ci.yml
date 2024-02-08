@@ -36,27 +36,32 @@ build-image:
   image:
     name: gcr.io/kaniko-project/executor:${KANIKO_VERSION}-debug
     entrypoint: [""]
-  only:
-    changes:
-      - Dockerfile
-      - "**/*.go"
-      - "cmd/tmpl/*.tmpl"
+#  only:
+#    changes:
+#      - Dockerfile
+#      - "**/*.go"
+#      - "cmd/tmpl/*.tmpl"
   script:
     # Provide Harbor and GitLab registry authorization 
     - printf '{"auths":{ 
         "%s":{"username":"%s","password":"%s"}, 
         "%s":{"username":"%s","password":"%s"}, 
         "%s":{"username":"%s","password":"%s"}
+        }, "proxies":{
+        "http-proxy":"%s",
+        "https-proxy":"%s",
+        "no-proxy":"%s"
         }}' 
         $REGISTRY_SERVER_AZ1 $HARBOR_ROBOT_NAME_AZ1 $(echo -n "$HARBOR_ROBOT_SECRET_AZ1" | base64 -d)
         $REGISTRY_SERVER_AZ2 $HARBOR_ROBOT_NAME_AZ2 $(echo -n "$HARBOR_ROBOT_SECRET_AZ2" | base64 -d)
         $CI_REGISTRY $CI_REGISTRY_USER $CI_REGISTRY_PASSWORD
+        $http_proxy $https_proxy $no_proxy
         > /kaniko/.docker/config.json
     
     # Run Kaniko (caching layers in GitLab registry, final image in Harbor)
     - /kaniko/executor 
-      --build-arg http_proxy=$https_proxy 
-      --build-arg https_proxy=$https_proxy 
+      --build-arg HTTP_PROXY=$https_proxy 
+      --build-arg HTTPS_PROXY=$https_proxy 
       --cache 
       --cache-repo $CI_REGISTRY/$CI_PROJECT_PATH 
       --context $CI_PROJECT_DIR 
