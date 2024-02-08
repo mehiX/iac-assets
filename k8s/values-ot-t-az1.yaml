@@ -10,6 +10,6 @@ ingress:
         - path: /
           pathType: Prefix
   tls:
-  - secretName: iac-assets-tls
+  - secretName: iac-assets-launchpad-tls
     hosts:
       - iacassets.launchpad.ot-t-az1.l12m.nl
