@@ -7,8 +7,8 @@ FROM harbor.cicd-p-az1.l12m.nl/docker-hub-proxy/library/golang:alpine AS builder
 ARG HTTP_PROXY
 ARG HTTPS_PROXY
 
-COPY ./certs/* /usr/local/share/ca-certificates/
-RUN cat /usr/local/share/ca-certificates/logius* >> /etc/ssl/certs/ca-certificates.crt
+#COPY ./certs/* /usr/local/share/ca-certificates/
+#RUN cat /usr/local/share/ca-certificates/logius* >> /etc/ssl/certs/ca-certificates.crt
 
 RUN env
 
@@ -27,7 +27,7 @@ ARG HTTPS_PROXY
 ENV HTTPS_PROXY=${HTTPS_PROXY}
 ENV HTTP_PROXY=${HTTP_PROXY}
 
-COPY --from=builder /etc/ssl/certs /etc/ssl/certs
+#COPY --from=builder /etc/ssl/certs /etc/ssl/certs
 RUN apk --no-cache add ca-certificates
 
 COPY --from=builder /go/bin/app /app
