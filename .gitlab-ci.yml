@@ -12,6 +12,7 @@ variables:
   IMAGE_NAME: "launchpad/iac-assets" 
   TAG: "0.1"
   NAMESPACE: "launchpad"
+  KANIKO_VERSION: "v1.6.0"
 
 format:
   stage: test
