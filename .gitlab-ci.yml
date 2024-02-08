@@ -28,7 +28,7 @@ compile:
     paths:
       - dist
 
-prepare:
+.prepare:
   image: safenetlabs/k8s-cicd:1.0.11-22
   stage: deploy
   script: 
@@ -45,7 +45,6 @@ prepare:
 
 .deploy:
   image: alpine/helm:latest
-  needs: ["prepare"]
   stage: deploy
   before_script:
     - echo "Custom variables file:${CUSTOM_VARS_FILE}"
@@ -56,7 +55,15 @@ prepare:
       -f ${CUSTOM_VARS_FILE}  \
       --namespace=${NAMESPACE}
 
+prepare-az1:
+  stage: deploy
+  environment: ot-t-az1.dgp-ot
+  extends:
+    - .prepare
+    
 deploy-ot1:
+  stage: deploy
+  needs: ["prepare-az1"]
   variables:
     CUSTOM_VARS_FILE: ./kfk/values-ot-t-az1.yaml
   environment: ot-t-az1.dgp-ot
