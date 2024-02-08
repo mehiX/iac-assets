@@ -18,7 +18,7 @@ variables:
   REGISTRY_SERVER_AZ2: harbor.cicd-p-az2.l12m.nl
   REGISTRY_PROJECT: "dgp"
   IMAGE_NAME: "launchpad/iac-assets" 
-  TAG: "0.1"
+  TAG: "0.2"
   NAMESPACE: "launchpad"
   KANIKO_VERSION: "v1.6.0"
 
@@ -73,7 +73,6 @@ build-image:
       --dockerfile $CI_PROJECT_DIR/Dockerfile 
       --single-snapshot
 
-
 .prepare:
   image: safenetlabs/k8s-cicd:1.0.11-22
   stage: deploy
@@ -99,6 +98,8 @@ build-image:
     - |
       helm upgrade -i iax-assets ./k8s/iac-assets \
       -f ${CUSTOM_VARS_FILE}  \
+      --set image.repository=${IMAGE_REPO} \
+      --set image.tag=${TAG}
       --namespace=${NAMESPACE}
 
 prepare-az1:
@@ -112,6 +113,7 @@ deploy-ot1:
   needs: ["prepare-az1"]
   variables:
     CUSTOM_VARS_FILE: ./k8s/values-ot-t-az1.yaml
+    IMAGE_REPO: ${REGISTRY_SERVER_AZ1}/${REGISTRY_PROJECT}/${IMAGE_NAME}
   environment: ot-t-az1.dgp-ot
   extends: 
     - .deploy 
