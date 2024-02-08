@@ -60,12 +60,12 @@ prepare-az1:
   environment: ot-t-az1.dgp-ot
   extends:
     - .prepare
-    
+
 deploy-ot1:
   stage: deploy
   needs: ["prepare-az1"]
   variables:
-    CUSTOM_VARS_FILE: ./kfk/values-ot-t-az1.yaml
+    CUSTOM_VARS_FILE: ./k8s/values-ot-t-az1.yaml
   environment: ot-t-az1.dgp-ot
   extends: 
     - .deploy 
